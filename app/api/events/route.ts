@@ -2,6 +2,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+// Code deplecated, now is just a reference to the new /src/lib/connect.ts file, 
+// which handles the connection to Supabase and manages the connection status.
+
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

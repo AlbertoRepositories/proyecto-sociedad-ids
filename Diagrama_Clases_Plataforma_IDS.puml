@@ -1,0 +1,133 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+left to right direction
+
+class User {
+  - name: String
+  - username: String
+  - email: String
+  - externalAuthProvider: String
+  - notificationsEnabled: Boolean
+  + changeUsername(newUsername: String): Boolean
+  + updateNotificationPreference(enabled: Boolean): void
+  + requestEventInformation(event: Blog): Boolean
+}
+
+class Administrator {
+  - administratorTitle: String
+  + grantAdministratorRole(user: User): Boolean
+  + revokeAdministratorRole(user: User): Boolean
+  + viewUserEmail(user: User): String
+}
+
+class Calendar {
+  - semesterStartDate: LocalDate
+  - semesterEndDate: LocalDate
+  - events: List<Blog>
+  + validateEvent(event: Blog): Boolean
+  + registerEvent(event: Blog): Boolean
+  + editEvent(event: Blog): Boolean
+  + hideEvent(event: Blog): Boolean
+  + deleteEvent(event: Blog): Boolean
+  + displayEvents(): List<Blog>
+  + requestEventNotification(event: Blog, recipients: List<User>): void
+  + sendEventInformationByEmail(event: Blog, user: User): Boolean
+}
+
+class Blog {
+  - title: String
+  - content: String
+  - creationDate: LocalDateTime
+  - expirationDate: LocalDate
+  - isVisible: Boolean
+  - viewCount: Integer
+  - likeCount: Integer
+  - publicationType: String
+  - eventStartDate: LocalDateTime
+  - eventEndDate: LocalDateTime
+  - location: String
+  - registrationUrl: String
+  - imageUrls: List<String>
+  + publishPost(): Boolean
+  + editPost(title: String, content: String): Boolean
+  + displayPost(): String
+  + deletePost(): Boolean
+  + hidePost(): Boolean
+  + registerView(): void
+  + registerLike(): void
+}
+
+class Comment {
+  - content: String
+  - creationDate: LocalDateTime
+  - likeCount: Integer
+  - isHiddenByAuthor: Boolean
+  - author: User
+  - replies: List<Comment>
+  + publishComment(): Boolean
+  + hideComment(): Boolean
+  + displayComment(): String
+  + deleteComment(): Boolean
+  + addReply(reply: Comment): Boolean
+}
+
+class Forum {
+  - comments: List<Comment>
+  - lastActivityDate: LocalDateTime
+  + displayComments(): List<Comment>
+  + addComment(comment: Comment): Boolean
+  + removeExpiredComments(currentDate: LocalDate): Integer
+}
+
+abstract class Notification {
+  - notificationTime: LocalDateTime
+  - title: String
+  - content: String
+  - isRead: Boolean
+  {abstract} + notify(recipient: User): Boolean
+}
+
+class SystemNotification {
+  + notify(recipient: User): Boolean
+  + displayInSystem(recipient: User): Boolean
+}
+
+User <|-- Administrator
+Blog <|-- Forum
+Notification <|-- SystemNotification
+
+Administrator "1" --> "0..*" Blog : manages
+Calendar "1" --> "0..*" Blog : manages event posts
+User "1" --> "0..*" Comment : writes
+Forum "1" *-- "0..*" Comment : contains
+User "1" --> "0..*" Notification : receives
+Calendar "1" --> "1" SystemNotification : requests notification
+
+note right of Administrator
+  Access rules:
+  Only administrators can create, edit,
+  hide or delete blog posts and events.
+  Only authorized administrators can grant
+  or revoke administrator roles.
+  User email access is restricted.
+end note
+
+note right of Forum
+  Access rules:
+  Users can publish text comments.
+  Comment authors can hide their own
+  comments; administrators can delete them.
+  Forum comments expire at the end of
+  their semester block.
+end note
+
+note right of SystemNotification
+  Notifications are displayed within the website.
+  Only users who have logged in and enabled
+  notifications receive internal notifications.
+  Event information requested by a user is
+  sent by email and is a separate process.
+end note
+
+@enduml
