@@ -1,5 +1,6 @@
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 import configService from "./config.service.js";
+import { Logger } from "../logger/logger";
 
 export interface CustomJwtPayload extends JwtPayload {
   id: string | number;
@@ -33,9 +34,10 @@ export const generateJWT = (
 
     return jwt.sign(payload, configService.SECRET, options);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message =
+      error instanceof Error ? error.message : String(error);
 
-    console.error("Error generating JWT token:", message);
+    Logger.error(`Error generating JWT token: ${message}`);
 
     throw new Error("Error generating authentication token");
   }
@@ -50,7 +52,8 @@ export const verifyToken = (
     }
 
     const tokenParts = token.split(" ");
-    const tokenValue = tokenParts.length === 2 ? tokenParts[1] : token;
+    const tokenValue =
+      tokenParts.length === 2 ? tokenParts[1] : token;
 
     const decoded = jwt.verify(
       tokenValue,
@@ -68,9 +71,10 @@ export const verifyToken = (
 
     return decoded;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message =
+      error instanceof Error ? error.message : String(error);
 
-    console.error("Error verifying JWT token:", message);
+    Logger.error(`Error verifying JWT token: ${message}`);
 
     return null;
   }

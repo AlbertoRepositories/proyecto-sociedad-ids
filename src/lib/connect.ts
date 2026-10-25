@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import configService from "../utils/config.service";
+import { Logger } from "../logger/logger";
 
 const Status = Object.freeze({
   DISCONNECTED: "disconnected",
@@ -45,13 +46,19 @@ class Database {
         supabaseKey
       );
 
-      console.log("Supabase client initialized successfully");
+      Logger.info(
+        "Supabase client initialized successfully."
+      );
 
       this.status = Status.CONNECTED;
 
       return this.supabase;
     } catch (error: unknown) {
-      console.error("Error connecting to Supabase:", error);
+      Logger.error(
+        `Error connecting to Supabase: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
 
       this.status = Status.ERROR;
 
@@ -61,7 +68,9 @@ class Database {
 
   setupListeners(): void {
     process.on("SIGINT", () => {
-      console.log("Shutting down gracefully (SIGINT)...");
+      Logger.info(
+        "Shutting down gracefully (SIGINT)..."
+      );
 
       this.status = Status.DISCONNECTED;
 
@@ -69,7 +78,9 @@ class Database {
     });
 
     process.on("SIGTERM", () => {
-      console.log("Shutting down the service (SIGTERM)...");
+      Logger.info(
+        "Shutting down the service (SIGTERM)..."
+      );
 
       this.status = Status.DISCONNECTED;
 

@@ -22,19 +22,46 @@ export type AuthenticationResult =
   | AuthenticationSuccess
   | AuthenticationFailure;
 
-function getTokenFromRequest(
-  request: NextRequest
-): string | null {
-  const authorizationHeader =
-    request.headers.get("authorization");
+const ADMINISTRATOR_ROLES = [
+  "admin",
+  "administrator",
+  "administrador",
+];
+
+function getTokenFromRequest(request: NextRequest): string | null {
+  const authorizationHeader = request.headers.get("authorization");
 
   if (authorizationHeader?.startsWith("Bearer ")) {
-    return authorizationHeader.substring("Bearer ".length);
+    return authorizationHeader.substring("Bearer ".length).trim();
   }
 
   const cookieToken = request.cookies.get("token")?.value;
 
   return cookieToken ?? null;
+}
+
+function createUnauthorizedResponse(
+  message: string
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: "Unauthorized",
+      message,
+    },
+    { status: 401 }
+  );
+}
+
+function createForbiddenResponse(
+  message: string
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: "Forbidden",
+      message,
+    },
+    { status: 403 }
+  );
 }
 
 export function authenticateRequest(
@@ -45,13 +72,8 @@ export function authenticateRequest(
   if (!token) {
     return {
       authenticated: false,
-      response: NextResponse.json(
-        {
-          error: "No autenticado.",
-          message:
-            "Debes iniciar sesión para realizar esta acción.",
-        },
-        { status: 401 }
+      response: createUnauthorizedResponse(
+        "Debes iniciar sesión para realizar esta acción."
       ),
     };
   }
@@ -61,12 +83,8 @@ export function authenticateRequest(
   if (!verifiedUser) {
     return {
       authenticated: false,
-      response: NextResponse.json(
-        {
-          error: "Token inválido.",
-          message: "La sesión no es válida o ya expiró.",
-        },
-        { status: 401 }
+      response: createUnauthorizedResponse(
+        "La sesión no es válida o ya expiró."
       ),
     };
   }
@@ -95,25 +113,23 @@ export function requireAdministrator(
   const normalizedRole =
     authenticationResult.user.role.trim().toLowerCase();
 
-  const administratorRoles = [
-    "admin",
-    "administrator",
-    "administrador",
-  ];
+  const isAdministrator =
+    ADMINISTRATOR_ROLES.includes(normalizedRole);
 
-  if (!administratorRoles.includes(normalizedRole)) {
+  if (!isAdministrator) {
     return {
       authenticated: false,
-      response: NextResponse.json(
-        {
-          error: "Acceso denegado.",
-          message:
-            "No tienes permisos de administrador para realizar esta acción.",
-        },
-        { status: 403 }
+      response: createForbiddenResponse(
+        "No tienes permisos de administrador para realizar esta acción."
       ),
     };
   }
 
   return authenticationResult;
+}
+
+export function isAdministratorRole(role: string): boolean {
+  return ADMINISTRATOR_ROLES.includes(
+    role.trim().toLowerCase()
+  );
 }
