@@ -1,5 +1,6 @@
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import configService from "../utils/config.service";
-import { createClient } from '@supabase/supabase-js';
+import { Logger } from "../logger/logger";
 
 const Status = Object.freeze({
   DISCONNECTED: "disconnected",
@@ -8,64 +9,84 @@ const Status = Object.freeze({
 });
 
 class Database {
-    static instance: Database;
-    status!: string;
-    supabase!: any;
+  static instance: Database;
 
-    constructor() {
-        if (Database.instance) {
-            return Database.instance;
-        }
+  status: string = Status.DISCONNECTED;
+  supabase: SupabaseClient | null = null;
 
-        this.status = Status.DISCONNECTED;
-        this.supabase = null;
-        Database.instance = this;
-
-        this.setupListeners();
+  constructor() {
+    if (Database.instance) {
+      return Database.instance;
     }
 
-    async connect() {
-        if (this.status === Status.CONNECTED && this.supabase) {
-            return this.supabase;
-        }
+    this.status = Status.DISCONNECTED;
+    this.supabase = null;
+    Database.instance = this;
 
-        try {
-            const supabaseUrl = configService.SUPABASE_URL;
-            const supabaseKey = configService.SUPABASE_KEY;
+    this.setupListeners();
+  }
 
-            if (!supabaseUrl || !supabaseKey) {
-                throw new Error("Supabase URL or Key are missing in configuration.");
-            }
-
-            // Inicializar el cliente de Supabase
-            this.supabase = createClient(supabaseUrl, supabaseKey);
-
-            console.log("Supabase client initialized successfully");
-            this.status = Status.CONNECTED;
-            
-            return this.supabase;
-        } catch (error) {
-            console.error("Error connecting to Supabase:", error);
-            this.status = Status.ERROR;
-            throw error;
-        }
+  async connect(): Promise<SupabaseClient> {
+    if (this.status === Status.CONNECTED && this.supabase) {
+      return this.supabase;
     }
 
-    setupListeners() {
-        // Manejar cierre ordenado del proceso (SIGINT)
-        process.on("SIGINT", async () => {
-            console.log("Shutting down gracefully (SIGINT)...");
-            this.status = Status.DISCONNECTED;
-            process.exit(0);
-        });
+    try {
+      const supabaseUrl = configService.SUPABASE_URL;
+      const supabaseKey = configService.SUPABASE_KEY;
 
-        // Manejar cierre de la plataforma (SIGTERM)
-        process.on("SIGTERM", async () => {
-            console.log("Shutting down the service (SIGTERM)...");
-            this.status = Status.DISCONNECTED;
-            process.exit(0);
-        });
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error(
+          "Supabase URL or Key are missing in configuration."
+        );
+      }
+
+      this.supabase = createClient(
+        supabaseUrl,
+        supabaseKey
+      );
+
+      Logger.info(
+        "Supabase client initialized successfully."
+      );
+
+      this.status = Status.CONNECTED;
+
+      return this.supabase;
+    } catch (error: unknown) {
+      Logger.error(
+        `Error connecting to Supabase: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+
+      this.status = Status.ERROR;
+
+      throw error;
     }
+  }
+
+  setupListeners(): void {
+    process.on("SIGINT", () => {
+      Logger.info(
+        "Shutting down gracefully (SIGINT)..."
+      );
+
+      this.status = Status.DISCONNECTED;
+
+      process.exit(0);
+    });
+
+    process.on("SIGTERM", () => {
+      Logger.info(
+        "Shutting down the service (SIGTERM)..."
+      );
+
+      this.status = Status.DISCONNECTED;
+
+      process.exit(0);
+    });
+  }
 }
 
 const database = new Database();
