@@ -3,39 +3,32 @@ skinparam classAttributeIconSize 0
 hide empty members
 left to right direction
 
+' --- Enumeraciones ---
+enum UserType {
+  ADMINISTRATOR
+  REGULAR_USER
+}
+
+enum ContentType {
+  EVENT
+  FORUM
+  BLOG
+  NEWS
+}
+
+' --- Entidades Principales ---
 class User {
   - name: String
   - username: String
   - email: String
+  - type: UserType
   - externalAuthProvider: String
   - notificationsEnabled: Boolean
   + changeUsername(newUsername: String): Boolean
   + updateNotificationPreference(enabled: Boolean): void
-  + requestEventInformation(event: Blog): Boolean
 }
 
-class Administrator {
-  - administratorTitle: String
-  + grantAdministratorRole(user: User): Boolean
-  + revokeAdministratorRole(user: User): Boolean
-  + viewUserEmail(user: User): String
-}
-
-class Calendar {
-  - semesterStartDate: LocalDate
-  - semesterEndDate: LocalDate
-  - events: List<Blog>
-  + validateEvent(event: Blog): Boolean
-  + registerEvent(event: Blog): Boolean
-  + editEvent(event: Blog): Boolean
-  + hideEvent(event: Blog): Boolean
-  + deleteEvent(event: Blog): Boolean
-  + displayEvents(): List<Blog>
-  + requestEventNotification(event: Blog, recipients: List<User>): void
-  + sendEventInformationByEmail(event: Blog, user: User): Boolean
-}
-
-class Blog {
+abstract class Blog {
   - title: String
   - content: String
   - creationDate: LocalDateTime
@@ -58,6 +51,15 @@ class Blog {
   + registerLike(): void
 }
 
+' Herencia: El Foro es un tipo de Blog
+class Forum {
+  - comments: List<Comment>
+  - lastActivityDate: LocalDateTime
+  + displayComments(): List<Comment>
+  + addComment(comment: Comment): Boolean
+  + removeExpiredComments(currentDate: LocalDate): Integer
+}
+
 class Comment {
   - content: String
   - creationDate: LocalDateTime
@@ -72,14 +74,7 @@ class Comment {
   + addReply(reply: Comment): Boolean
 }
 
-class Forum {
-  - comments: List<Comment>
-  - lastActivityDate: LocalDateTime
-  + displayComments(): List<Comment>
-  + addComment(comment: Comment): Boolean
-  + removeExpiredComments(currentDate: LocalDate): Integer
-}
-
+' --- Sistema de Notificaciones ---
 abstract class Notification {
   - notificationTime: LocalDateTime
   - title: String
@@ -93,41 +88,63 @@ class SystemNotification {
   + displayInSystem(recipient: User): Boolean
 }
 
-User <|-- Administrator
+' --- Capa de Servicios (Lógica de Negocio) ---
+class Calendar {
+  - semesterStartDate: LocalDate
+  - semesterEndDate: LocalDate
+  - events: List<Blog>
+  + registerEvent(event: Blog): Boolean
+  + editEvent(event: Blog): Boolean
+  + hideEvent(event: Blog): Boolean
+  + deleteEvent(event: Blog): Boolean
+  + displayEvents(): List<Blog>
+  + requestEventNotification(event: Blog, recipients: List<User>): void
+}
+
+class AuthManager {
+  - emails: List<String>
+  + addEmail(email: String): Boolean
+  + removeEmail(email: String): Boolean
+  + isEmailWhitelisted(email: String): Boolean
+  + checkPermission(user: User, action: String): Boolean
+}
+
+' --- Relaciones ---
+
 Blog <|-- Forum
+Forum *-- Comment : contains
+
+' Asociaciones de Propiedad/Acceso
+User "1" --> "0..*" Blog : manages
+User "1" --> "0..*" Comment : writes
+User "1" --> "0..*" Notification : receives
+
+' Relaciones de Servicio
+Calendar "1" --> "0..*" Blog : manages event posts
+Calendar -- AuthManager : validates permissions
+Blog -- AuthManager : validates permissions
+Forum -- AuthManager : validates permissions
+Comment -- AuthManager : validates permissions
+
+
+
+' Relaciones de Herencia Correctas
 Notification <|-- SystemNotification
 
-Administrator "1" --> "0..*" Blog : manages
-Calendar "1" --> "0..*" Blog : manages event posts
-User "1" --> "0..*" Comment : writes
-Forum "1" *-- "0..*" Comment : contains
-User "1" --> "0..*" Notification : receives
-Calendar "1" --> "1" SystemNotification : requests notification
-
-note right of Administrator
-  Access rules:
-  Only administrators can create, edit,
-  hide or delete blog posts and events.
-  Only authorized administrators can grant
-  or revoke administrator roles.
-  User email access is restricted.
+' --- Notas de Reglas de Negocio ---
+note right of AuthManager
+  Centraliza las reglas de acceso:
+  - Validar si el usuario es ADMIN.
+  - Controlar la Whitelist de emails.
+  - Verificar permisos de edición/borrado.
 end note
 
 note right of Forum
-  Access rules:
-  Users can publish text comments.
-  Comment authors can hide their own
-  comments; administrators can delete them.
-  Forum comments expire at the end of
-  their semester block.
-end note
-
-note right of SystemNotification
-  Notifications are displayed within the website.
-  Only users who have logged in and enabled
-  notifications receive internal notifications.
-  Event information requested by a user is
-  sent by email and is a separate process.
+  Reglas de Foro:
+  - Usuarios pueden publicar comentarios.
+  - Autores pueden ocultar(Se vera como eliminar) sus propios comentarios.
+  - Admins pueden borrar cualquier comentario.
+  - Expiración automática al final del bloque del semestre.
 end note
 
 @enduml
