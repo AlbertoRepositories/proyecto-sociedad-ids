@@ -1,5 +1,3 @@
-import { Comment } from './Comment';
-
 export interface Blog {
   id: string;
   title: string;
@@ -15,9 +13,4 @@ export interface Blog {
   location: string;
   registrationUrl: string;
   imageUrls: string[];
-}
-
-// Forum inherits from Blog as per the diagram
-export interface Forum extends Blog {
-  comments: Comment[];
 }
