@@ -2,9 +2,9 @@ name: Lint Codebase
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   lint:
@@ -12,20 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Descargar código
         uses: actions/checkout@v4
 
-      # --- Setup Environment (Example: Node.js) ---
-      - name: Setup Node.js
+      - name: Preparar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: npm
 
-      # --- Install Project Dependencies ---
-      - name: Install Dependencies
+      - name: Instalar dependencias
         run: npm ci
 
-      # --- Execute Linter ---
-      - name: Run Linter
+      - name: Ejecutar linter
         run: npm run lint
