@@ -1,3 +1,4 @@
+import { ContentType } from "../types/enums";
 /**
  * Data required to create a Blog entity.
  */
@@ -10,7 +11,7 @@ export interface BlogProperties {
   isVisible?: boolean;
   viewCount?: number;
   likeCount?: number;
-  publicationType: string;
+  publicationType: ContentType;
   eventStartDate?: Date;
   eventEndDate?: Date;
   location?: string | null;
@@ -38,7 +39,8 @@ export abstract class Blog {
   public isVisible: boolean;
   public viewCount: number;
   public likeCount: number;
-  public publicationType: string;
+  public publicationType: ContentType;
+  public isDeleted: boolean;
   public eventStartDate: Date;
   public eventEndDate: Date;
   public location: string | null;
@@ -64,22 +66,8 @@ export abstract class Blog {
     this.location = properties.location ?? null;
     this.registrationUrl =
       properties.registrationUrl ?? null;
+    this.isDeleted = false;
     this.imageUrls = [...(properties.imageUrls ?? [])];
-  }
-
-  /**
-   * Makes the publication visible.
-   */
-  public publishPost(): boolean {
-    if (
-      this.title.trim().length === 0 ||
-      this.content.trim().length === 0
-    ) {
-      return false;
-    }
-
-    this.isVisible = true;
-    return true;
   }
 
   /**
@@ -105,33 +93,55 @@ export abstract class Blog {
   }
 
   /**
-   * Returns the public representation of the publication.
-   */
-  public displayPost(): string {
-    if (!this.isVisible) {
-      return "";
-    }
-
-    return `${this.title}\n\n${this.content}`;
+ * Returns the public representation of the publication.
+ * Hidden and permanently deleted publications are not public.
+ */
+public displayPost(): string {
+  if (!this.isVisible || this.isDeleted) {
+    return "";
   }
 
-  /**
-   * Hides the publication.
-   *
-   * The persistence layer is responsible for physically deleting records.
-   */
-  public deletePost(): boolean {
-    this.isVisible = false;
-    return true;
+  return `${this.title}\n\n${this.content}`;
+}
+
+/**
+ * Permanently deletes the publication from the domain perspective.
+ * The repository will later persist the permanent deletion.
+ */
+public deletePost(): boolean {
+  this.isVisible = false;
+  this.isDeleted = true;
+  return true;
+}
+
+/**
+ * Hides the publication for moderation.
+ * Administrators may review hidden publications later.
+ */
+public hidePost(): boolean {
+  if (this.isDeleted) {
+    return false;
   }
 
-  /**
-   * Hides the publication without deleting its record.
-   */
-  public hidePost(): boolean {
-    this.isVisible = false;
-    return true;
+  this.isVisible = false;
+  return true;
+}
+
+/**
+ * Publishes the publication unless it was permanently deleted.
+ */
+public publishPost(): boolean {
+  if (
+    this.isDeleted ||
+    this.title.trim().length === 0 ||
+    this.content.trim().length === 0
+  ) {
+    return false;
   }
+
+  this.isVisible = true;
+  return true;
+}
 
   /**
    * Registers a publication view.

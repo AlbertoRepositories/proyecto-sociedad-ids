@@ -11,6 +11,7 @@ export interface CommentProperties {
   likeCount?: number;
   isHiddenByAuthor?: boolean;
   replies?: Comment[];
+  isDeleted?: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export class Comment {
   public isHiddenByAuthor: boolean;
   public author: User;
   public replies: Comment[];
+  public isDeleted: boolean;
 
   constructor(properties: CommentProperties) {
     this.id = properties.id;
@@ -42,13 +44,17 @@ export class Comment {
       properties.isHiddenByAuthor ?? false;
     this.author = properties.author;
     this.replies = [...(properties.replies ?? [])];
+    this.isDeleted = properties.isDeleted ?? false;
   }
 
-  /**
-   * Publishes the comment when it contains text.
+    /**
+   * Publishes the comment unless it was permanently deleted.
    */
   public publishComment(): boolean {
-    if (this.content.trim().length === 0) {
+    if (
+      this.isDeleted ||
+      this.content.trim().length === 0
+    ) {
       return false;
     }
 
@@ -57,35 +63,49 @@ export class Comment {
   }
 
   /**
-   * Hides the comment without removing its record.
+   * Hides the comment for moderation.
    */
   public hideComment(): boolean {
+    if (this.isDeleted) {
+      return false;
+    }
+
     this.isHiddenByAuthor = true;
     return true;
   }
 
   /**
-   * Returns an empty string when the comment is hidden.
+   * Returns the public representation of the comment.
    */
   public displayComment(): string {
-    return this.isHiddenByAuthor
-      ? ""
-      : this.content;
+    if (
+      this.isHiddenByAuthor ||
+      this.isDeleted
+    ) {
+      return "";
+    }
+
+    return this.content;
   }
 
   /**
-   * Uses the same soft-delete behavior as hiding a comment.
+   * Permanently deletes the comment from the domain perspective.
    */
   public deleteComment(): boolean {
-    this.isHiddenByAuthor = true;
+    this.isHiddenByAuthor = false;
+    this.isDeleted = true;
     return true;
   }
 
-  /**
+    /**
    * Adds a reply to the comment.
    */
   public addReply(reply: Comment): boolean {
-    if (reply.content.trim().length === 0) {
+    if (
+      this.isDeleted ||
+      reply.isDeleted ||
+      reply.content.trim().length === 0
+    ) {
       return false;
     }
 
