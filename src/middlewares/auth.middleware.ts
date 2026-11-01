@@ -18,52 +18,62 @@ interface AuthenticationFailure {
   response: NextResponse;
 }
 
+/**
+ * Discriminated authentication result.
+ *
+ * SOLID:
+ * - ISP: consumers only depend on the authentication state they need.
+ */
 export type AuthenticationResult =
   | AuthenticationSuccess
   | AuthenticationFailure;
 
-const ADMINISTRATOR_ROLES = [
+const ADMINISTRATOR_ROLES = new Set([
   "admin",
   "administrator",
   "administrador",
-];
+]);
 
-function getTokenFromRequest(request: NextRequest): string | null {
-  const authorizationHeader = request.headers.get("authorization");
+/**
+ * Extracts a JWT from the Authorization header or token cookie.
+ *
+ * Refactoring:
+ * - Extract Method: token extraction is isolated and reusable.
+ */
+function getTokenFromRequest(
+  request: NextRequest
+): string | null {
+  const authorizationHeader =
+    request.headers.get("authorization");
 
   if (authorizationHeader?.startsWith("Bearer ")) {
-    return authorizationHeader.substring("Bearer ".length).trim();
+    return authorizationHeader
+      .slice("Bearer ".length)
+      .trim();
   }
 
-  const cookieToken = request.cookies.get("token")?.value;
-
-  return cookieToken ?? null;
+  return request.cookies.get("token")?.value ?? null;
 }
 
-function createUnauthorizedResponse(
+/**
+ * Creates a consistent authentication response.
+ */
+function createAuthenticationResponse(
+  status: 401 | 403,
   message: string
 ): NextResponse {
   return NextResponse.json(
     {
-      error: "Unauthorized",
+      error: status === 401 ? "Unauthorized" : "Forbidden",
       message,
     },
-    { status: 401 }
+    { status }
   );
 }
 
-function createForbiddenResponse(
-  message: string
-): NextResponse {
-  return NextResponse.json(
-    {
-      error: "Forbidden",
-      message,
-    },
-    { status: 403 }
-  );
-}
-
+/**
+ * Authenticates a request using the project's JWT utility.
+ */
 export function authenticateRequest(
   request: NextRequest
 ): AuthenticationResult {
@@ -72,7 +82,8 @@ export function authenticateRequest(
   if (!token) {
     return {
       authenticated: false,
-      response: createUnauthorizedResponse(
+      response: createAuthenticationResponse(
+        401,
         "Debes iniciar sesión para realizar esta acción."
       ),
     };
@@ -83,7 +94,8 @@ export function authenticateRequest(
   if (!verifiedUser) {
     return {
       authenticated: false,
-      response: createUnauthorizedResponse(
+      response: createAuthenticationResponse(
+        401,
         "La sesión no es válida o ya expiró."
       ),
     };
@@ -100,6 +112,12 @@ export function authenticateRequest(
   };
 }
 
+/**
+ * Requires an authenticated administrator.
+ *
+ * SOLID:
+ * - OCP: role policy is isolated in isAdministratorRole().
+ */
 export function requireAdministrator(
   request: NextRequest
 ): AuthenticationResult {
@@ -110,16 +128,11 @@ export function requireAdministrator(
     return authenticationResult;
   }
 
-  const normalizedRole =
-    authenticationResult.user.role.trim().toLowerCase();
-
-  const isAdministrator =
-    ADMINISTRATOR_ROLES.includes(normalizedRole);
-
-  if (!isAdministrator) {
+  if (!isAdministratorRole(authenticationResult.user.role)) {
     return {
       authenticated: false,
-      response: createForbiddenResponse(
+      response: createAuthenticationResponse(
+        403,
         "No tienes permisos de administrador para realizar esta acción."
       ),
     };
@@ -128,8 +141,13 @@ export function requireAdministrator(
   return authenticationResult;
 }
 
-export function isAdministratorRole(role: string): boolean {
-  return ADMINISTRATOR_ROLES.includes(
+/**
+ * Checks whether a role represents an administrator.
+ */
+export function isAdministratorRole(
+  role: string
+): boolean {
+  return ADMINISTRATOR_ROLES.has(
     role.trim().toLowerCase()
   );
 }

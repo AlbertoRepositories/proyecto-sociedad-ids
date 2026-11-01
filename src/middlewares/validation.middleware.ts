@@ -1,23 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface ValidationSuccess<T> {
+  valid: true;
+  data: T;
+}
+
+interface ValidationFailure {
+  valid: false;
+  response: NextResponse;
+}
+
+/**
+ * Discriminated validation result.
+ *
+ * SOLID:
+ * - ISP: consumers only depend on the validation result they need.
+ */
 export type ValidationResult<T> =
+  | ValidationSuccess<T>
+  | ValidationFailure;
+
+export type BodyValidator<T> = (
+  body: unknown
+) =>
   | {
       valid: true;
       data: T;
     }
   | {
       valid: false;
-      response: NextResponse;
+      errors?: string[];
     };
 
-export type BodyValidator<T> = (
-  body: unknown
-) => {
-  valid: boolean;
-  data?: T;
-  errors?: string[];
-};
-
+/**
+ * Parses and validates a JSON request body.
+ *
+ * SOLID:
+ * - SRP: parses JSON and delegates business validation.
+ * - DIP: depends on the BodyValidator abstraction.
+ *
+ * Refactoring:
+ * - Parameterize Method: validation rules are injected as a parameter.
+ */
 export async function validateRequestBody<T>(
   request: NextRequest,
   validator: BodyValidator<T>
@@ -29,13 +53,8 @@ export async function validateRequestBody<T>(
   } catch {
     return {
       valid: false,
-      response: NextResponse.json(
-        {
-          error: "Invalid request body",
-          message:
-            "El cuerpo de la solicitud debe contener JSON válido.",
-        },
-        { status: 400 }
+      response: createValidationResponse(
+        "El cuerpo de la solicitud debe contener JSON válido."
       ),
     };
   }
@@ -45,23 +64,39 @@ export async function validateRequestBody<T>(
   if (!validation.valid) {
     return {
       valid: false,
-      response: NextResponse.json(
-        {
-          error: "Validation failed",
-          message: "Los datos enviados no son válidos.",
-          errors: validation.errors ?? [],
-        },
-        { status: 400 }
+      response: createValidationResponse(
+        "Los datos enviados no son válidos.",
+        validation.errors
       ),
     };
   }
 
   return {
     valid: true,
-    data: validation.data as T,
+    data: validation.data,
   };
 }
 
+/**
+ * Creates a consistent validation error response.
+ */
+function createValidationResponse(
+  message: string,
+  errors: string[] = []
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: "Validation failed",
+      message,
+      errors,
+    },
+    { status: 400 }
+  );
+}
+
+/**
+ * Checks whether a value is a non-empty string.
+ */
 export function isNonEmptyString(
   value: unknown
 ): value is string {
@@ -71,6 +106,9 @@ export function isNonEmptyString(
   );
 }
 
+/**
+ * Checks whether a value represents a valid date.
+ */
 export function isValidDate(value: unknown): boolean {
   if (value instanceof Date) {
     return !Number.isNaN(value.getTime());
@@ -83,8 +121,14 @@ export function isValidDate(value: unknown): boolean {
   return !Number.isNaN(new Date(value).getTime());
 }
 
+/**
+ * Checks whether a value represents a valid URL.
+ */
 export function isValidUrl(value: unknown): boolean {
-  if (typeof value !== "string" || value.trim() === "") {
+  if (
+    typeof value !== "string" ||
+    value.trim().length === 0
+  ) {
     return false;
   }
 
@@ -96,10 +140,12 @@ export function isValidUrl(value: unknown): boolean {
   }
 }
 
+/**
+ * Rejects basic HTML characters from plain-text fields.
+ */
 export function isPlainText(value: unknown): boolean {
-  if (typeof value !== "string") {
-    return false;
-  }
-
-  return !/[<>]/.test(value);
+  return (
+    typeof value === "string" &&
+    !/[<>]/.test(value)
+  );
 }

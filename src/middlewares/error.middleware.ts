@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { Logger } from "../logger/logger";
 
+/**
+ * Represents a controlled application error.
+ *
+ * SOLID:
+ * - SRP: this class only represents known application errors.
+ */
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly details?: unknown;
@@ -18,6 +24,17 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Converts application errors into consistent HTTP responses.
+ *
+ * SOLID:
+ * - SRP: centralizes error-to-response conversion.
+ * - OCP: new controlled error types can be added without modifying
+ *   existing controllers.
+ *
+ * Refactoring:
+ * - Consolidate Conditional Expression: error handling is centralized.
+ */
 export function handleApiError(
   error: unknown
 ): NextResponse {
@@ -34,23 +51,13 @@ export function handleApiError(
     );
   }
 
-  if (error instanceof Error) {
-    Logger.error(
-      `Unexpected API error: ${error.message}`
-    );
-
-    return NextResponse.json(
-      {
-        error: "Internal Server Error",
-        message:
-          "Ocurrió un error inesperado en el servidor.",
-      },
-      { status: 500 }
-    );
-  }
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : String(error);
 
   Logger.error(
-    `Unknown API error: ${String(error)}`
+    `Unexpected API error: ${errorMessage}`
   );
 
   return NextResponse.json(

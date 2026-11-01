@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
+import { isValidUrl } from "./validation.middleware";
 
 export const MAX_IMAGES_PER_PUBLICATION = 3;
 
+/**
+ * Validates image URLs associated with a publication.
+ *
+ * SOLID:
+ * - SRP: this module only validates publication images.
+ * - OCP: the image limit is configurable through a constant.
+ *
+ * Refactoring:
+ * - Extract Method: URL validation is reused from validation.middleware.ts.
+ */
 export function validateImageLimit(
   imageUrls: unknown
 ): NextResponse | null {
@@ -20,7 +31,9 @@ export function validateImageLimit(
     );
   }
 
-  if (imageUrls.length > MAX_IMAGES_PER_PUBLICATION) {
+  if (
+    imageUrls.length > MAX_IMAGES_PER_PUBLICATION
+  ) {
     return NextResponse.json(
       {
         error: "Image limit exceeded",
@@ -34,9 +47,7 @@ export function validateImageLimit(
   }
 
   const containsInvalidImage = imageUrls.some(
-    (imageUrl) =>
-      typeof imageUrl !== "string" ||
-      imageUrl.trim().length === 0
+    (imageUrl) => !isValidUrl(imageUrl)
   );
 
   if (containsInvalidImage) {
@@ -44,7 +55,7 @@ export function validateImageLimit(
       {
         error: "Invalid image URL",
         message:
-          "Todas las imágenes deben tener una URL válida.",
+          "Todas las imágenes deben contener URLs válidas.",
       },
       { status: 400 }
     );
