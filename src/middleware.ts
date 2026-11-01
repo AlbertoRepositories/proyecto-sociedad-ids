@@ -16,8 +16,12 @@ export async function middleware(
 }
 
 /*
-  Runs the middleware for application routes while excluding
-  static files and internal Next.js assets.
+ * Applies the middleware to application routes while excluding
+ * Next.js internal assets and static files.
+ *
+ * This allows Supabase session handling to run for normal requests
+ * without running unnecessarily for files such as images, SVGs,
+ * favicon.ico, or files under "_next".
  */
 export const config = {
   matcher: [

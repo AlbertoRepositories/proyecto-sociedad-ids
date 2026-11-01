@@ -30,8 +30,11 @@ export class AuthManager {
     );
   }
 
-  /**
-   * Adds a valid email to the whitelist.
+    /**
+   * Adds a valid email to the administrator whitelist.
+   *
+   * This method only changes the domain collection. Authorization
+   * for who may call it belongs to the service or middleware layer.
    */
   public addEmail(email: string): boolean {
     const normalizedEmail =
@@ -47,8 +50,12 @@ export class AuthManager {
     return this.emails.size > previousSize;
   }
 
-  /**
-   * Removes an email from the whitelist.
+    /**
+   * Removes an email from the administrator whitelist.
+   *
+   * Authorization for this operation belongs to the service or
+   * middleware layer because only authorized administrators may
+   * manage the whitelist.
    */
   public removeEmail(email: string): boolean {
     return this.emails.delete(
@@ -70,27 +77,31 @@ export class AuthManager {
   /**
    * Checks whether a user can execute an action.
    *
-   * Administrators are allowed to perform all actions.
-   * Regular users require a whitelisted email and a public action.
+   * Regular users may perform public actions such as reading content
+   * and participating in the forum. Administrative actions are only
+   * available to administrator users.
+   *
+   * The whitelist is intentionally not used here as a general access
+   * mechanism. It is used to control administrator authorization and
+   * role management, which will be enforced by the service layer.
    */
   public checkPermission(
     user: User,
     action: string
   ): boolean {
-    if (user.type === UserType.ADMINISTRATOR) {
-      return true;
-    }
-
     const normalizedAction = action
       .trim()
       .toLowerCase();
 
-    return (
-      this.isEmailWhitelisted(user.email) &&
+    if (
       AuthManager.PUBLIC_ACTIONS.has(
         normalizedAction
       )
-    );
+    ) {
+      return true;
+    }
+
+    return user.type === UserType.ADMINISTRATOR;
   }
 
   /**

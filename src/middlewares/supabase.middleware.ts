@@ -32,6 +32,19 @@ export async function updateSupabaseSession(
     return response;
   }
 
+  /**
+   * Creates a server-side Supabase client for the current request.
+   *
+   * The client uses the public Supabase URL and publishable key, and
+   * receives an adapter for reading and writing authentication cookies.
+   * Supabase uses these cookies to identify and refresh the user's
+   * authentication session.
+   *
+   * The cookie adapter keeps the request cookies synchronized with the
+   * response cookies, so refreshed session tokens are sent back to the
+   * browser.
+   */
+
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
@@ -44,8 +57,11 @@ export async function updateSupabaseSession(
           return request.cookies.getAll();
         },
 
-        /**
-         * Updates cookies in both the request and response.
+        /**     
+         * Writes refreshed authentication cookies to both the request
+         * and the response. The request must be updated so subsequent
+         * server-side operations see the refreshed session, while the
+         * response must be updated so the browser stores the new cookies.
          */
         setAll(
           cookiesToSet: {
