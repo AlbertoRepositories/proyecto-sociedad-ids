@@ -7,10 +7,8 @@ import {
 /**
  * Authorizes a user to hide their own comment.
  *
- * SOLID:
  * - SRP: this function only checks comment ownership.
  *
- * Refactoring:
  * - Extract Method: ownership and administrator authorization
  *   are represented by separate functions.
  */
@@ -38,9 +36,6 @@ export function authorizeCommentOwner(
   );
 }
 
-/**
- * Authorizes an administrator to delete a comment.
- */
 export function authorizeCommentDeletion(
   authenticatedUser: AuthenticatedUser
 ): NextResponse | null {

@@ -1,9 +1,6 @@
 import { Blog } from "./Blog";
 import { User } from "./User";
 
-/**
- * Data required to create a Calendar entity.
- */
 export interface CalendarProperties {
   id: string;
   semesterStartDate: Date;
@@ -14,11 +11,9 @@ export interface CalendarProperties {
 /**
  * Represents the academic event calendar.
  *
- * SOLID:
  * - SRP: manages calendar boundaries and event membership.
  * - DIP: stores Blog abstractions instead of concrete event classes.
  *
- * Refactoring:
  * - Encapsulate Collection: event collection changes through
  *   calendar methods.
  */
@@ -28,10 +23,6 @@ export class Calendar {
   public semesterEndDate: Date;
   public events: Blog[];
 
-  /**
-   * Temporarily stores notification requests until a service
-   * is introduced to deliver them through Supabase.
-   */
   private notificationRequests: Map<
     string,
     User[]
@@ -46,9 +37,6 @@ export class Calendar {
     this.events = [...(properties.events ?? [])];
   }
 
-  /**
-   * Registers an event that belongs to the semester.
-   */
   public registerEvent(event: Blog): boolean {
     if (
       !this.isWithinSemester(event) ||
@@ -64,9 +52,6 @@ export class Calendar {
     return true;
   }
 
-  /**
-   * Replaces an existing event with its updated version.
-   */
   public editEvent(event: Blog): boolean {
     const eventIndex = this.events.findIndex(
       (existingEvent) =>
@@ -84,9 +69,6 @@ export class Calendar {
     return true;
   }
 
-  /**
-   * Hides an event without removing it from the calendar.
-   */
   public hideEvent(event: Blog): boolean {
     const existingEvent = this.findEvent(event.id);
 
@@ -95,9 +77,6 @@ export class Calendar {
       : false;
   }
 
-  /**
-   * Removes an event from the in-memory calendar collection.
-   */
   public deleteEvent(event: Blog): boolean {
     const originalLength = this.events.length;
 
@@ -109,9 +88,6 @@ export class Calendar {
     return this.events.length < originalLength;
   }
 
-  /**
-   * Returns visible events ordered by their start date.
-   */
   public displayEvents(): Blog[] {
     return this.events
       .filter((event) => event.isVisible)
@@ -122,9 +98,6 @@ export class Calendar {
       );
   }
 
-  /**
-   * Stores a notification request for later service processing.
-   */
   public requestEventNotification(
     event: Blog,
     recipients: User[]
@@ -139,9 +112,6 @@ export class Calendar {
     );
   }
 
-  /**
-   * Checks whether an event belongs to the semester.
-   */
   private isWithinSemester(event: Blog): boolean {
     return (
       event.eventStartDate >=
@@ -150,9 +120,6 @@ export class Calendar {
     );
   }
 
-  /**
-   * Finds an event by identifier.
-   */
   private findEvent(
     eventId: string
   ): Blog | undefined {

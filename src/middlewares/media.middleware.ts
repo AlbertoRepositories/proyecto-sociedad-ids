@@ -6,11 +6,9 @@ export const MAX_IMAGES_PER_PUBLICATION = 3;
 /**
  * Validates image URLs associated with a publication.
  *
- * SOLID:
  * - SRP: this module only validates publication images.
  * - OCP: the image limit is configurable through a constant.
  *
- * Refactoring:
  * - Extract Method: URL validation is reused from validation.middleware.ts.
  */
 export function validateImageLimit(

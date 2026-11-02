@@ -16,10 +16,7 @@ export interface UserProperties {
 /**
  * Represents a platform user.
  *
- * SOLID:
  * - SRP: contains user state and user-specific behavior only.
- *
- * Refactoring:
  * - Replace Primitive Data Holder: behavior was moved from a
  *   plain interface into the domain entity.
  */
@@ -44,12 +41,6 @@ export class User {
       properties.notificationsEnabled ?? false;
   }
 
-  /**
-   * Changes the username when the new value is valid.
-   *
-   * Uniqueness must be checked by a repository or service because
-   * the entity does not access the database.
-   */
   public changeUsername(newUsername: string): boolean {
     const normalizedUsername = newUsername.trim();
 
@@ -61,9 +52,6 @@ export class User {
     return true;
   }
 
-  /**
-   * Updates the user's notification preference.
-   */
   public updateNotificationPreference(
     enabled: boolean
   ): void {
@@ -71,9 +59,6 @@ export class User {
   }
 }
 
-/**
- * Represents an administrator user.
- */
 export class Administrator extends User {
   public administratorTitle: string;
 

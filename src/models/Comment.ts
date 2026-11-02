@@ -47,9 +47,6 @@ export class Comment {
     this.isDeleted = properties.isDeleted ?? false;
   }
 
-    /**
-   * Publishes the comment unless it was permanently deleted.
-   */
   public publishComment(): boolean {
     if (
       this.isDeleted ||
@@ -62,9 +59,6 @@ export class Comment {
     return true;
   }
 
-  /**
-   * Hides the comment for moderation.
-   */
   public hideComment(): boolean {
     if (this.isDeleted) {
       return false;
@@ -74,9 +68,6 @@ export class Comment {
     return true;
   }
 
-  /**
-   * Returns the public representation of the comment.
-   */
   public displayComment(): string {
     if (
       this.isHiddenByAuthor ||
@@ -88,18 +79,12 @@ export class Comment {
     return this.content;
   }
 
-  /**
-   * Permanently deletes the comment from the domain perspective.
-   */
   public deleteComment(): boolean {
     this.isHiddenByAuthor = false;
     this.isDeleted = true;
     return true;
   }
 
-    /**
-   * Adds a reply to the comment.
-   */
   public addReply(reply: Comment): boolean {
     if (
       this.isDeleted ||
@@ -113,9 +98,6 @@ export class Comment {
     return true;
   }
 
-  /**
-   * Registers a like on the comment.
-   */
   public registerLike(): void {
     this.likeCount += 1;
   }

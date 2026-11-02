@@ -4,7 +4,6 @@ import { Logger } from "../logger/logger";
 /**
  * Represents a controlled application error.
  *
- * SOLID:
  * - SRP: this class only represents known application errors.
  */
 export class ApiError extends Error {
@@ -27,12 +26,10 @@ export class ApiError extends Error {
 /**
  * Converts application errors into consistent HTTP responses.
  *
- * SOLID:
  * - SRP: centralizes error-to-response conversion.
  * - OCP: new controlled error types can be added without modifying
  *   existing controllers.
  *
- * Refactoring:
  * - Consolidate Conditional Expression: error handling is centralized.
  */
 export function handleApiError(

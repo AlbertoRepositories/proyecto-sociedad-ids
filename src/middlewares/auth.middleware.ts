@@ -37,7 +37,6 @@ const ADMINISTRATOR_ROLES = new Set([
 /**
  * Extracts a JWT from the Authorization header or token cookie.
  *
- * Refactoring:
  * - Extract Method: token extraction is isolated and reusable.
  */
 function getTokenFromRequest(
@@ -55,9 +54,6 @@ function getTokenFromRequest(
   return request.cookies.get("token")?.value ?? null;
 }
 
-/**
- * Creates a consistent authentication response.
- */
 function createAuthenticationResponse(
   status: 401 | 403,
   message: string
@@ -71,9 +67,8 @@ function createAuthenticationResponse(
   );
 }
 
-/**
- * Authenticates a request using the project's JWT utility.
- */
+
+ // Authenticates a request using the project's JWT utility.
 export function authenticateRequest(
   request: NextRequest
 ): AuthenticationResult {
@@ -115,7 +110,6 @@ export function authenticateRequest(
 /**
  * Requires an authenticated administrator.
  *
- * SOLID:
  * - OCP: role policy is isolated in isAdministratorRole().
  */
 export function requireAdministrator(
@@ -141,9 +135,6 @@ export function requireAdministrator(
   return authenticationResult;
 }
 
-/**
- * Checks whether a role represents an administrator.
- */
 export function isAdministratorRole(
   role: string
 ): boolean {

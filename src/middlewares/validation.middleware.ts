@@ -35,11 +35,9 @@ export type BodyValidator<T> = (
 /**
  * Parses and validates a JSON request body.
  *
- * SOLID:
  * - SRP: parses JSON and delegates business validation.
  * - DIP: depends on the BodyValidator abstraction.
  *
- * Refactoring:
  * - Parameterize Method: validation rules are injected as a parameter.
  */
 export async function validateRequestBody<T>(
@@ -77,9 +75,6 @@ export async function validateRequestBody<T>(
   };
 }
 
-/**
- * Creates a consistent validation error response.
- */
 function createValidationResponse(
   message: string,
   errors: string[] = []
@@ -94,9 +89,6 @@ function createValidationResponse(
   );
 }
 
-/**
- * Checks whether a value is a non-empty string.
- */
 export function isNonEmptyString(
   value: unknown
 ): value is string {
@@ -106,9 +98,6 @@ export function isNonEmptyString(
   );
 }
 
-/**
- * Checks whether a value represents a valid date.
- */
 export function isValidDate(value: unknown): boolean {
   if (value instanceof Date) {
     return !Number.isNaN(value.getTime());
@@ -121,9 +110,6 @@ export function isValidDate(value: unknown): boolean {
   return !Number.isNaN(new Date(value).getTime());
 }
 
-/**
- * Checks whether a value represents a valid URL.
- */
 export function isValidUrl(value: unknown): boolean {
   if (
     typeof value !== "string" ||
@@ -140,9 +126,6 @@ export function isValidUrl(value: unknown): boolean {
   }
 }
 
-/**
- * Rejects basic HTML characters from plain-text fields.
- */
 export function isPlainText(value: unknown): boolean {
   return (
     typeof value === "string" &&

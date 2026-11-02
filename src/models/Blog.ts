@@ -1,7 +1,5 @@
 import { ContentType } from "../types/enums";
-/**
- * Data required to create a Blog entity.
- */
+
 export interface BlogProperties {
   id: string;
   title: string;
@@ -22,11 +20,9 @@ export interface BlogProperties {
 /**
  * Base entity for blog posts, news, events, and forum posts.
  *
- * SOLID:
  * - SRP: manages publication state and publication behavior.
  * - OCP: specialized publication types can extend this class.
  *
- * Refactoring:
  * - Extract Superclass: common publication behavior is centralized
  *   so Forum does not duplicate Blog logic.
  */
@@ -70,9 +66,6 @@ export abstract class Blog {
     this.imageUrls = [...(properties.imageUrls ?? [])];
   }
 
-  /**
-   * Updates the title and content of the publication.
-   */
   public editPost(
     title: string,
     content: string
@@ -92,10 +85,6 @@ export abstract class Blog {
     return true;
   }
 
-  /**
- * Returns the public representation of the publication.
- * Hidden and permanently deleted publications are not public.
- */
 public displayPost(): string {
   if (!this.isVisible || this.isDeleted) {
     return "";
@@ -104,20 +93,12 @@ public displayPost(): string {
   return `${this.title}\n\n${this.content}`;
 }
 
-/**
- * Permanently deletes the publication from the domain perspective.
- * The repository will later persist the permanent deletion.
- */
 public deletePost(): boolean {
   this.isVisible = false;
   this.isDeleted = true;
   return true;
 }
 
-/**
- * Hides the publication for moderation.
- * Administrators may review hidden publications later.
- */
 public hidePost(): boolean {
   if (this.isDeleted) {
     return false;
@@ -127,9 +108,6 @@ public hidePost(): boolean {
   return true;
 }
 
-/**
- * Publishes the publication unless it was permanently deleted.
- */
 public publishPost(): boolean {
   if (
     this.isDeleted ||
@@ -143,16 +121,10 @@ public publishPost(): boolean {
   return true;
 }
 
-  /**
-   * Registers a publication view.
-   */
   public registerView(): void {
     this.viewCount += 1;
   }
 
-  /**
-   * Registers a publication like.
-   */
   public registerLike(): void {
     this.likeCount += 1;
   }

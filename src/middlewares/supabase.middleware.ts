@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - DIP: it depends on Supabase's cookie abstraction.
  *
  * Refactoring:
- * - Extract Method: session handling was extracted from middleware.ts.
+ * - Extract Method: session handling was extracted from middleware.ts into this, more appropriate, module.
  */
 
 export async function updateSupabaseSession(
@@ -24,45 +24,25 @@ export async function updateSupabaseSession(
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  /**
-   * Continue without Supabase session handling when configuration
-   * is incomplete. This prevents unrelated routes from crashing.
-   */
   if (!supabaseUrl || !supabaseKey) {
     return response;
   }
 
-  /**
-   * Creates a server-side Supabase client for the current request.
-   *
-   * The client uses the public Supabase URL and publishable key, and
-   * receives an adapter for reading and writing authentication cookies.
-   * Supabase uses these cookies to identify and refresh the user's
-   * authentication session.
-   *
-   * The cookie adapter keeps the request cookies synchronized with the
-   * response cookies, so refreshed session tokens are sent back to the
-   * browser.
-   */
+  
+  // Creates a server-side Supabase client for the current request to validate it using the user's cookies.
+
 
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
     {
       cookies: {
-        /**
-         * Returns all cookies received in the request.
-         */
+         // Returns all cookies received in the request.
         getAll(): { name: string; value: string }[] {
           return request.cookies.getAll();
         },
 
-        /**     
-         * Writes refreshed authentication cookies to both the request
-         * and the response. The request must be updated so subsequent
-         * server-side operations see the refreshed session, while the
-         * response must be updated so the browser stores the new cookies.
-         */
+        // Updates the renovated cookies into the response to the client.
         setAll(
           cookiesToSet: {
             name: string;
@@ -86,10 +66,9 @@ export async function updateSupabaseSession(
     }
   );
 
-  /**
-   * getUser validates the session against Supabase.
-   * It is safer than trusting session data stored only in cookies.
-   */
+
+   // getUser validates the session against Supabase.
+   
   await supabase.auth.getUser();
 
   return response;
