@@ -3,21 +3,12 @@ import { UserType } from "../types/enums";
 
 /**
  * Represents the access-control domain entity.
-  
+ *
  * - SRP: manages whitelist and domain permission rules.
-
  * - Encapsulate Collection: email collection changes through methods.
  */
-
 export class AuthManager {
   private readonly emails: Set<string>;
-
-  private static readonly PUBLIC_ACTIONS = new Set([
-    "read",
-    "view",
-    "display",
-    "comment",
-  ]);
 
   constructor(emails: string[] = []) {
     this.emails = new Set(
@@ -28,7 +19,7 @@ export class AuthManager {
         .filter((email) => email.length > 0)
     );
   }
-  
+
   public addEmail(email: string): boolean {
     const normalizedEmail =
       AuthManager.normalizeEmail(email);
@@ -57,22 +48,7 @@ export class AuthManager {
     );
   }
 
-  public checkPermission(
-    user: User,
-    action: string
-  ): boolean {
-    const normalizedAction = action
-      .trim()
-      .toLowerCase();
-
-    if (
-      AuthManager.PUBLIC_ACTIONS.has(
-        normalizedAction
-      )
-    ) {
-      return true;
-    }
-
+  public checkPermission(user: User): boolean {
     return user.type === UserType.ADMINISTRATOR;
   }
 
@@ -80,8 +56,7 @@ export class AuthManager {
     return email.trim().toLowerCase();
   }
 
-  
-   // Performs basic email validation.
+  // Performs basic email validation.
   private static isValidEmail(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
       email

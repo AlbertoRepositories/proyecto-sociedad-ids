@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "../utils/jwt_generator";
+import { UserType } from "../types/enums";
 
 export interface AuthenticatedUser {
   id: string | number;
   email: string;
   name: string;
-  role: string;
+  role: UserType;
 }
 
 interface AuthenticationSuccess {
@@ -21,18 +22,11 @@ interface AuthenticationFailure {
 /**
  * Discriminated authentication result.
  *
- * SOLID:
  * - ISP: consumers only depend on the authentication state they need.
  */
 export type AuthenticationResult =
   | AuthenticationSuccess
   | AuthenticationFailure;
-
-const ADMINISTRATOR_ROLES = new Set([
-  "admin",
-  "administrator",
-  "administrador",
-]);
 
 /**
  * Extracts a JWT from the Authorization header or token cookie.
@@ -67,8 +61,6 @@ function createAuthenticationResponse(
   );
 }
 
-
- // Authenticates a request using the project's JWT utility.
 export function authenticateRequest(
   request: NextRequest
 ): AuthenticationResult {
@@ -136,9 +128,7 @@ export function requireAdministrator(
 }
 
 export function isAdministratorRole(
-  role: string
+  role: UserType
 ): boolean {
-  return ADMINISTRATOR_ROLES.has(
-    role.trim().toLowerCase()
-  );
+  return role === UserType.ADMINISTRATOR;
 }
