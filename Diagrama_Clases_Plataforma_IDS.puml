@@ -106,7 +106,7 @@ class AuthManager {
   + addEmail(email: String): Boolean
   + removeEmail(email: String): Boolean
   + isEmailWhitelisted(email: String): Boolean
-  + checkPermission(user: User, action: String): Boolean
+  + checkPermission(user: User): Boolean
 }
 
 ' --- Relaciones ---

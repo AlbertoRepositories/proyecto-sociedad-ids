@@ -1,24 +1,59 @@
-import { User } from './User';
+import { User } from "./User";
 
-// This must be filled before being sent
-export abstract class Notification {
-  id: string = '';
-  notificationTime: Date = new Date();
-  title: string = 'Default title';
-  content: string = 'Default notification content';
-  isRead: boolean = false;
-
-  abstract notify(recipient: User): Promise<boolean>;
+export interface NotificationProperties {
+  id: string;
+  notificationTime?: Date;
+  title: string;
+  content: string;
+  isRead?: boolean;
 }
 
-export class SystemNotification extends Notification {
-  displayInSystem(recipient: User): boolean {
-    // Logic for displaying in system
-    return true;
+/**
+ * Base notification abstraction.
+ *
+ * - OCP: new notification types can extend this abstraction.
+ * - DIP: consumers depend on Notification rather than a concrete
+ *   notification implementation.
+ */
+
+export abstract class Notification {
+  public id: string;
+  public notificationTime: Date;
+  public title: string;
+  public content: string;
+  public isRead: boolean;
+
+  protected constructor(
+    properties: NotificationProperties
+  ) {
+    this.id = properties.id;
+    this.notificationTime =
+      properties.notificationTime ?? new Date();
+    this.title = properties.title;
+    this.content = properties.content;
+    this.isRead = properties.isRead ?? false;
   }
 
-  async notify(recipient: User): Promise<boolean> {
-    // Logic for notification
-    return true;
+  public abstract notify(
+    recipient: User
+  ): Promise<boolean>;
+}
+
+
+ // Notification displayed inside the application.
+export class SystemNotification
+  extends Notification
+{
+
+  public displayInSystem(
+    recipient: User
+  ): boolean {
+    return recipient.id.trim().length > 0;
+  }
+
+  public async notify(
+    recipient: User
+  ): Promise<boolean> {
+    return this.displayInSystem(recipient);
   }
 }
