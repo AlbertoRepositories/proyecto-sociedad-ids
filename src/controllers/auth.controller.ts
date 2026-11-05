@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 
+import supabase from '../lib/connect';
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
 export class AuthController {
   static async addEmail(req: Request, res: Response): Promise<void> {
     try {
@@ -10,7 +17,20 @@ export class AuthController {
         return;
       }
       // Logic to add email to whitelist
-      res.status(200).json({ success: true, message: 'Email added to whitelist' });
+      const { data, error } = await db
+        .from('whitelist') 
+        .insert([{
+          email: email,
+          added_at: new Date()
+        }])
+        .select(); 
+
+      if (error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+
+      res.status(200).json({ success: true, message: 'Email added to whitelist', data: data });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }
@@ -24,6 +44,16 @@ export class AuthController {
         return;
       }
       // Logic to remove email from whitelist
+      const { error } = await db
+        .from('whitelist')
+        .delete()
+        .eq('email', email);
+
+      if (error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+
       res.status(200).json({ success: true, message: 'Email removed from whitelist' });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
@@ -38,7 +68,18 @@ export class AuthController {
         return;
       }
       // Logic to check whitelist
-      res.status(200).json({ success: true, isWhitelisted: true });
+      const { data, error } = await db
+        .from('whitelist')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+
+      res.status(200).json({ success: true, isWhitelisted: data.length > 0 });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }
@@ -54,6 +95,8 @@ export class AuthController {
         return;
       }
       // Logic to check permission
+
+      
       res.status(200).json({ success: true, hasPermission: true });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });

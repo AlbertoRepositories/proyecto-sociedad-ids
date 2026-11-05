@@ -6,6 +6,14 @@ import { User } from '../models/User';
 import supabase from '../lib/connect';
 import { ContentType } from '../types/enums';
 
+
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
+
 export class CalendarController {
   static async registerEvent(req: Request, res: Response): Promise<void> {
     try {
@@ -16,7 +24,7 @@ export class CalendarController {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('blogs')
         .insert([
           {
@@ -56,7 +64,7 @@ export class CalendarController {
       const { eventId } = req.params;
       // Logic to edit event
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('blogs')
         .update([
           {
@@ -82,7 +90,7 @@ export class CalendarController {
     try {
       const { eventId } = req.body;
       // Logic to hide event
-      const { error } = await supabase
+      const { error } = await db
         .from('blogs')
         .update([
           {
@@ -106,7 +114,7 @@ export class CalendarController {
     try {
       const { eventId } = req.body;
       // Logic to delete event
-      const { error } = await supabase
+      const { error } = await db
         .from('blogs')
         .delete()
         .eq('id', eventId);
@@ -125,7 +133,7 @@ export class CalendarController {
   static async displayEvents(req: Request, res: Response): Promise<void> {
     try {
       // Logic to display events
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('blogs')
         .select('*')
         .eq('publication_type', ContentType.EVENT)
@@ -146,7 +154,7 @@ export class CalendarController {
   static async requestEventNotification(req: Request, res: Response): Promise<void> {
     try {
       const { event, recipients } = req.body;
-      const { error } = await supabase
+      const { error } = await db
         .from('event_notifications')
         .insert([
           {

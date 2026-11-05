@@ -2,6 +2,13 @@ import { Request, Response } from 'express';
 import { Notification } from '../models/Notification';
 import { User } from '../models/User';
 
+import supabase from '../lib/connect';
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
 export class NotificationController {
   static async notify(req: Request, res: Response): Promise<void> {
     try {

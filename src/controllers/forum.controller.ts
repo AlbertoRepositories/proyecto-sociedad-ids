@@ -2,10 +2,20 @@ import { Request, Response } from 'express';
 import { Forum } from '../models/Forum';
 import { Comment } from '../models/Comment';
 
+import supabase from '../lib/connect';
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
+
 export class ForumController {
   static async displayComments(req: Request, res: Response): Promise<void> {
     try {
+      const { forumId } = req.body;
       // Logic to display comments
+      
       res.status(200).json({ success: true, message: 'Comments displayed' });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });

@@ -3,6 +3,13 @@ import { Comment } from '../models/Comment';
 
 import supabase from '../lib/connect';
 
+
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
 export class CommentController {
   static async publishComment(req: Request, res: Response): Promise<void> {
     try {
@@ -13,7 +20,7 @@ export class CommentController {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('comments') 
         .insert([{
           content: comment.content,
@@ -41,7 +48,7 @@ export class CommentController {
     try {
       // Logic to hide comment
       const { commentId } = req.body;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('comments')
         .update([
           {
@@ -66,7 +73,7 @@ export class CommentController {
     try {
       // Logic to display comment
       const { commentId } = req.body;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('comments')
         .update([
           {
@@ -90,7 +97,7 @@ export class CommentController {
     try {
       // Logic to delete comment
       const { commentId } = req.body;
-      const { error } = await supabase
+      const { error } = await db
         .from('comments')
         .delete()
         .eq('id', commentId);
@@ -115,7 +122,7 @@ export class CommentController {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('comments') 
         .insert([{
           content: reply.content,
