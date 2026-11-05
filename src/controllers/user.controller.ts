@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 
+import supabase from '../lib/connect';
+let db = supabase.supabase
+
+if(db === null){
+  throw new Error("Database connection is not initialized.");
+}
+
 export class UserController {
   static async changeUsername(req: Request, res: Response): Promise<void> {
     try {
