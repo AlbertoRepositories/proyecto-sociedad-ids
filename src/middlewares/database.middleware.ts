@@ -1,7 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import database from "../lib/connect";
-import { ApiError, handleApiError } from "./error.middleware";
+import database, {
+  DatabaseUnavailableError,
+} from "../lib/connect";
+import {
+  ApiError,
+  handleApiError,
+} from "./error.middleware";
 
 type DatabaseHandler = (
   request: NextRequest,
@@ -16,23 +24,28 @@ export function withDatabase(
   return async (
     request: NextRequest
   ): Promise<NextResponse> => {
+    let supabase: SupabaseClient;
+
     try {
-      const supabase = await database.connect();
-
+      supabase = await database.connect();
       await database.checkConnection(supabase);
-
-      return await handler(request, supabase);
     } catch (error: unknown) {
-      if (error instanceof ApiError) {
-        return handleApiError(error);
+      if (error instanceof DatabaseUnavailableError) {
+        return handleApiError(
+          new ApiError(
+            "La base de datos no está disponible.",
+            503
+          )
+        );
       }
 
-      return handleApiError(
-        new ApiError(
-          "La base de datos no está disponible.",
-          503
-        )
-      );
+      return handleApiError(error);
+    }
+
+    try {
+      return await handler(request, supabase);
+    } catch (error: unknown) {
+      return handleApiError(error);
     }
   };
 }

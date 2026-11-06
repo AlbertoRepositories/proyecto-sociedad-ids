@@ -1,13 +1,12 @@
 BEGIN;
 
--- Users
-INSERT INTO users (
+INSERT INTO public."User" (
     id,
     name,
     username,
     email,
-    external_auth_provider,
-    notifications_enabled,
+    "externalAuthProvider",
+    "notificationsEnabled",
     type
 ) VALUES
 (
@@ -39,8 +38,7 @@ INSERT INTO users (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Administrators
-INSERT INTO administrators (
+INSERT INTO public.administrators (
     user_id,
     administrator_title
 ) VALUES (
@@ -49,21 +47,25 @@ INSERT INTO administrators (
 )
 ON CONFLICT (user_id) DO NOTHING;
 
--- Current whitelist table
-INSERT INTO whitelist (
+INSERT INTO public.access_logs (
     id,
-    email
+    user_id,
+    action,
+    ip_address,
+    user_agent
 ) VALUES (
-    '00000000-0000-4000-8000-000000000101',
-    'ana.admin@example.com'
+    '00000000-0000-4000-8000-000000000601',
+    '00000000-0000-4000-8000-000000000001',
+    'LOGIN',
+    '127.0.0.1',
+    'PostmanRuntime'
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Calendar
-INSERT INTO calendars (
+INSERT INTO public."Calendar" (
     id,
-    semester_start_date,
-    semester_end_date
+    "semesterStartDate",
+    "semesterEndDate"
 ) VALUES (
     '00000000-0000-4000-8000-000000000201',
     '2026-08-01',
@@ -71,21 +73,20 @@ INSERT INTO calendars (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Blog/event publication
-INSERT INTO blogs (
+INSERT INTO public."Blog" (
     id,
     title,
     content,
-    expiration_date,
-    is_visible,
-    view_count,
-    like_count,
-    publication_type,
-    event_start_date,
-    event_end_date,
+    "expirationDate",
+    "isVisible",
+    "viewCount",
+    "likeCount",
+    "publicationType",
+    "eventStartDate",
+    "eventEndDate",
     location,
-    registration_url,
-    image_urls,
+    "registrationUrl",
+    "imageUrls",
     calendar_id,
     administrator_id
 ) VALUES (
@@ -109,8 +110,7 @@ INSERT INTO blogs (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Forum based on the blog publication
-INSERT INTO forums (
+INSERT INTO public."Forum" (
     blog_id,
     last_activity_date
 ) VALUES (
@@ -119,12 +119,11 @@ INSERT INTO forums (
 )
 ON CONFLICT (blog_id) DO NOTHING;
 
--- Comments
-INSERT INTO comments (
+INSERT INTO public."Comment" (
     id,
     content,
-    like_count,
-    is_hidden_by_author,
+    "likeCount",
+    "isHiddenByAuthor",
     author_id,
     forum_id,
     parent_comment_id
@@ -149,67 +148,22 @@ INSERT INTO comments (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Notifications
-INSERT INTO notifications (
+INSERT INTO public."Notification" (
     id,
+    "notificationTime",
     title,
     content,
-    is_read,
+    "isRead",
     recipient_id,
     notification_type
 ) VALUES (
     '00000000-0000-4000-8000-000000000501',
+    CURRENT_TIMESTAMP,
     'Nuevo taller disponible',
     'Se publicó un nuevo taller de desarrollo web.',
     FALSE,
     '00000000-0000-4000-8000-000000000002',
     'SYSTEM'
-)
-ON CONFLICT (id) DO NOTHING;
-
--- Access logs
-INSERT INTO access_logs (
-    id,
-    user_id,
-    action,
-    ip_address,
-    user_agent
-) VALUES (
-    '00000000-0000-4000-8000-000000000601',
-    '00000000-0000-4000-8000-000000000001',
-    'LOGIN',
-    '127.0.0.1',
-    'PostmanRuntime'
-)
-ON CONFLICT (id) DO NOTHING;
-
--- Existing events table shown in Supabase.
--- This is temporary test data until the team decides whether
--- events will remain separate from blogs.
-INSERT INTO events (
-    id,
-    title,
-    description,
-    start_at,
-    end_at,
-    location,
-    registration_url,
-    image_urls,
-    is_visible,
-    expires_at
-) VALUES (
-    '00000000-0000-4000-8000-000000000701',
-    'Evento temporal de prueba',
-    'Registro temporal para probar la tabla events desde Postman.',
-    '2026-11-20 09:00:00',
-    '2026-11-20 12:00:00',
-    'Auditorio IDS',
-    'https://example.com/registro-evento',
-    ARRAY[
-        'https://example.com/evento-prueba.jpg'
-    ]::TEXT[],
-    TRUE,
-    '2026-12-20 23:59:59'
 )
 ON CONFLICT (id) DO NOTHING;
 
