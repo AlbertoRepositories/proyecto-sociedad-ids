@@ -1,87 +1,75 @@
--- Base tables
-CREATE TABLE users (
+CREATE TABLE public."User" (
     id UUID PRIMARY KEY, -- UUID v7
-    name VARCHAR(255) NOT NULL,
-    username VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    external_auth_provider VARCHAR(100),
-    notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    name VARCHAR(64) NOT NULL,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    "externalAuthProvider" VARCHAR(100) NOT NULL,
+    "notificationsEnabled" BOOLEAN NOT NULL DEFAULT FALSE,
     type VARCHAR(50) NOT NULL -- Corresponds to UserType
 );
 
-CREATE TABLE administrators (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    administrator_title VARCHAR(255) NOT NULL
+CREATE TABLE public."Administrator" (
+    "userId" UUID PRIMARY KEY 
+        REFERENCES public."User"(id) ON DELETE CASCADE,
+    "administratorTitle" VARCHAR(255) NOT NULL
 );
 
--- AuthManager Tables
-CREATE TABLE whitelist (
+CREATE TABLE public."AccessLog" (
     id UUID PRIMARY KEY, -- UUID v7
-    email VARCHAR(255) UNIQUE NOT NULL,
-    added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE access_logs (
-    id UUID PRIMARY KEY, -- UUID v7
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    action VARCHAR(50) NOT NULL, -- e.g., 'LOGIN', 'LOGOUT', 'DENIED'
-    ip_address VARCHAR(45),
-    user_agent TEXT,
+    "userId" UUID REFERENCES public."User"(id) ON DELETE SET NULL,
+    action VARCHAR(50) NOT NULL, -- e.g., 'LOGIN, LOGOUT, DENIED'
+    "ipAddress" VARCHAR(45),
+    "userAgent" TEXT,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Calendar Tables
-CREATE TABLE calendars (
-    id UUID PRIMARY KEY, -- UUID v7
-    semester_start_date DATE NOT NULL,
-    semester_end_date DATE NOT NULL
+CREATE TABLE public."Calendar" (
+    id UUID PRIMARY KEY, --UUID v7
+    "semesterStartDate" DATE NOT NULL,
+    "semesterEndDate" DATE NOT NULL
 );
 
--- Blog Tables
-CREATE TABLE blogs (
+CREATE TABLE public."Blog" (
     id UUID PRIMARY KEY, -- UUID v7
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expiration_date DATE,
-    is_visible BOOLEAN NOT NULL DEFAULT TRUE,
-    view_count INTEGER NOT NULL DEFAULT 0,
-    like_count INTEGER NOT NULL DEFAULT 0,
-    publication_type VARCHAR(100) NOT NULL,
-    event_start_date TIMESTAMP NOT NULL,
-    event_end_date TIMESTAMP NOT NULL,
+    "creationDate" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expirationDate" DATE,
+    "isVisible" BOOLEAN NOT NULL DEFAULT TRUE,
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "likeCount" INTEGER NOT NULL DEFAULT 0,
+    "publicationType" VARCHAR(100) NOT NULL,
+    "eventStartDate" TIMESTAMP NOT NULL,
+    "eventEndDate" TIMESTAMP NOT NULL,
     location VARCHAR(255),
-    registration_url VARCHAR(255),
-    image_urls TEXT[],
-    calendar_id UUID REFERENCES calendars(id) ON DELETE SET NULL,
-    administrator_id UUID REFERENCES administrators(user_id) ON DELETE SET NULL
+    "registrationUrl" VARCHAR (255),
+    "imageUrls" TEXT[],
+    "calendarId" UUID REFERENCES public."Calendar"(id) ON DELETE SET NULL,
+    "administratorId" UUID REFERENCES public."Administrator"("userId") ON DELETE SET NULL
 );
 
--- Forum Tables
-CREATE TABLE forums (
-    blog_id UUID PRIMARY KEY REFERENCES blogs(id) ON DELETE CASCADE,
-    last_activity_date TIMESTAMP
+CREATE TABLE public."Forum" (
+    "blogId" UUID PRIMARY KEY REFERENCES public."Blog"(id) ON DELETE CASCADE,
+    "lastActivityDate" TIMESTAMP
 );
 
--- Comment Tables
-CREATE TABLE comments (
+CREATE TABLE public."Comment" (
     id UUID PRIMARY KEY, -- UUID v7
     content TEXT NOT NULL,
-    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    like_count INTEGER NOT NULL DEFAULT 0,
-    is_hidden_by_author BOOLEAN NOT NULL DEFAULT FALSE,
-    author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    forum_id UUID REFERENCES forums(blog_id) ON DELETE CASCADE,
-    parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE
+    "creationDate" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "likeCount" INTEGER NOT NULL DEFAULT 0,
+    "isHiddenByAuthor" BOOLEAN NOT NULL DEFAULT FALSE,
+    "authorId" UUID REFERENCES public."User"(id) ON DELETE SET NULL,
+    "forumId" UUID REFERENCES public."Forum"("blogId") ON DELETE CASCADE,
+    "parentCommentId" UUID REFERENCES public."Comment"(id) ON DELETE CASCADE
 );
 
--- Notification Tables
-CREATE TABLE notifications (
+CREATE TABLE public."Notification" (
     id UUID PRIMARY KEY, -- UUID v7
-    notification_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "notificationTime" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    notification_type VARCHAR(50) NOT NULL
+    "isRead" BOOLEAN NOT NULL DEFAULT FALSE,
+    "recipientId" UUID REFERENCES public."User"(id) ON DELETE CASCADE,
+    "notificationType" VARCHAR(50) NOT NULL
 );

@@ -36,7 +36,6 @@ export abstract class Blog {
   public viewCount: number;
   public likeCount: number;
   public publicationType: ContentType;
-  public isDeleted: boolean;
   public eventStartDate: Date;
   public eventEndDate: Date;
   public location: string | null;
@@ -62,7 +61,6 @@ export abstract class Blog {
     this.location = properties.location ?? null;
     this.registrationUrl =
       properties.registrationUrl ?? null;
-    this.isDeleted = false;
     this.imageUrls = [...(properties.imageUrls ?? [])];
   }
 
@@ -86,7 +84,7 @@ export abstract class Blog {
   }
 
 public displayPost(): string {
-  if (!this.isVisible || this.isDeleted) {
+  if (!this.isVisible ) {
     return "";
   }
 
@@ -95,22 +93,16 @@ public displayPost(): string {
 
 public deletePost(): boolean {
   this.isVisible = false;
-  this.isDeleted = true;
   return true;
 }
 
 public hidePost(): boolean {
-  if (this.isDeleted) {
-    return false;
-  }
-
   this.isVisible = false;
   return true;
 }
 
 public publishPost(): boolean {
   if (
-    this.isDeleted ||
     this.title.trim().length === 0 ||
     this.content.trim().length === 0
   ) {
