@@ -11,7 +11,6 @@ export interface CommentProperties {
   likeCount?: number;
   isHiddenByAuthor?: boolean;
   replies?: Comment[];
-  isDeleted?: boolean;
 }
 
 /**
@@ -32,7 +31,6 @@ export class Comment {
   public isHiddenByAuthor: boolean;
   public author: User;
   public replies: Comment[];
-  public isDeleted: boolean;
 
   constructor(properties: CommentProperties) {
     this.id = properties.id;
@@ -44,12 +42,10 @@ export class Comment {
       properties.isHiddenByAuthor ?? false;
     this.author = properties.author;
     this.replies = [...(properties.replies ?? [])];
-    this.isDeleted = properties.isDeleted ?? false;
   }
 
   public publishComment(): boolean {
     if (
-      this.isDeleted ||
       this.content.trim().length === 0
     ) {
       return false;
@@ -60,7 +56,7 @@ export class Comment {
   }
 
   public hideComment(): boolean {
-    if (this.isDeleted) {
+    if (this.isHiddenByAuthor) {
       return false;
     }
 
@@ -70,8 +66,7 @@ export class Comment {
 
   public displayComment(): string {
     if (
-      this.isHiddenByAuthor ||
-      this.isDeleted
+      this.isHiddenByAuthor
     ) {
       return "";
     }
@@ -81,14 +76,13 @@ export class Comment {
 
   public deleteComment(): boolean {
     this.isHiddenByAuthor = false;
-    this.isDeleted = true;
     return true;
   }
 
   public addReply(reply: Comment): boolean {
     if (
-      this.isDeleted ||
-      reply.isDeleted ||
+      this.isHiddenByAuthor ||
+      reply.isHiddenByAuthor ||
       reply.content.trim().length === 0
     ) {
       return false;

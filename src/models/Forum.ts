@@ -30,8 +30,7 @@ export class Forum extends Blog {
   public displayComments(): Comment[] {
     return this.comments.filter(
       (comment) =>
-        !comment.isHiddenByAuthor &&
-        !comment.isDeleted
+        !comment.isHiddenByAuthor
     );
   }
 
