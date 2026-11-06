@@ -38,21 +38,21 @@ INSERT INTO public."User" (
 )
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.administrators (
-    user_id,
-    administrator_title
+INSERT INTO public."Administrator" (
+    "userId",
+    "administratorTitle"
 ) VALUES (
     '00000000-0000-4000-8000-000000000001',
     'Administradora de la Sociedad IDS'
 )
-ON CONFLICT (user_id) DO NOTHING;
+ON CONFLICT ("userId") DO NOTHING;
 
-INSERT INTO public.access_logs (
+INSERT INTO public."AccessLog" (
     id,
-    user_id,
+    "userId",
     action,
-    ip_address,
-    user_agent
+    "ipAddress",
+    "userAgent"
 ) VALUES (
     '00000000-0000-4000-8000-000000000601',
     '00000000-0000-4000-8000-000000000001',
@@ -87,8 +87,8 @@ INSERT INTO public."Blog" (
     location,
     "registrationUrl",
     "imageUrls",
-    calendar_id,
-    administrator_id
+    "calendarId",
+    "administratorId"
 ) VALUES (
     '00000000-0000-4000-8000-000000000301',
     'Taller de desarrollo web',
@@ -111,22 +111,22 @@ INSERT INTO public."Blog" (
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public."Forum" (
-    blog_id,
-    last_activity_date
+    "blogId",
+    "lastActivityDate"
 ) VALUES (
     '00000000-0000-4000-8000-000000000301',
     '2026-11-05 12:00:00'
 )
-ON CONFLICT (blog_id) DO NOTHING;
+ON CONFLICT ("blogId") DO NOTHING;
 
 INSERT INTO public."Comment" (
     id,
     content,
     "likeCount",
     "isHiddenByAuthor",
-    author_id,
-    forum_id,
-    parent_comment_id
+    "authorId",
+    "forumId",
+    "parentCommentId"
 ) VALUES
 (
     '00000000-0000-4000-8000-000000000401',
@@ -154,8 +154,8 @@ INSERT INTO public."Notification" (
     title,
     content,
     "isRead",
-    recipient_id,
-    notification_type
+    "recipientId",
+    "notificationType"
 ) VALUES (
     '00000000-0000-4000-8000-000000000501',
     CURRENT_TIMESTAMP,
