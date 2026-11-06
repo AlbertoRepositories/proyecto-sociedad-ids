@@ -66,6 +66,27 @@ class Database {
     }
   }
 
+async checkConnection(client: SupabaseClient): Promise<void> {
+  const { error } = await client
+    .from("Blog")
+    .select("id")
+    .limit(1);
+
+  if (error) {
+    this.status = Status.ERROR;
+
+    Logger.error(
+      `Database health check failed: ${error.message}`
+    );
+
+    throw new Error(
+      "La base de datos no está disponible."
+    );
+  }
+
+  this.status = Status.CONNECTED;
+}
+
   setupListeners(): void {
     process.on("SIGINT", () => {
       Logger.info(

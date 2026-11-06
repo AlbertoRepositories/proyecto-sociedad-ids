@@ -1,43 +1,34 @@
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { withDatabase } from "../../../middlewares/database.middleware";
 
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+export const GET = withDatabase(
+  async (
+    _request: NextRequest,
+    supabase
+  ): Promise<NextResponse> => {
+    const { data, error } = await supabase
+      .from("Blog")
+      .select("*")
+      .eq("isVisible", true)
+      .eq("publicationType", "EVENT")
+      .order("eventStartDate", {
+        ascending: true,
+      });
 
-// Code deplecated, now is just a reference to the new /src/lib/connect.ts file, 
-// which handles the connection to Supabase and manages the connection status.
+    if (error) {
+      return NextResponse.json(
+        {
+          error: "No se pudieron consultar los eventos.",
+          details: error.message,
+          code: error.code,
+        },
+        { status: 500 }
+      );
+    }
 
-export async function GET() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json(
-      { error: "Falta configurar la conexión con Supabase." },
-      { status: 500 }
-    );
+    return NextResponse.json(data);
   }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_visible", true)
-    .order("start_at", { ascending: true });
-
-  if (error) {
-  console.error("Error de Supabase:", error);
-
-  return NextResponse.json(
-    {
-      error: "No se pudieron consultar los eventos.",
-      detalle: error.message,
-      codigo: error.code,
-      detalles: error.details,
-      sugerencia: error.hint,
-    },
-    { status: 500 }
-  );
-}
-
-  return NextResponse.json(data);
-}
+);
