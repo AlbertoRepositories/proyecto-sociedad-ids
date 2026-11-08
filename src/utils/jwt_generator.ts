@@ -1,12 +1,16 @@
-import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
+import jwt, {
+  JwtPayload,
+  SignOptions,
+} from "jsonwebtoken";
 import configService from "./config.service.js";
 import { Logger } from "../logger/logger";
+import { UserType } from "../types/enums";
 
 export interface CustomJwtPayload extends JwtPayload {
   id: string | number;
   email: string;
   name: string;
-  role: string;
+  role: UserType;
 }
 
 interface TokenRequest {
@@ -64,7 +68,7 @@ export const verifyToken = (
       decoded.id === undefined ||
       !decoded.email ||
       !decoded.name ||
-      !decoded.role
+      !Object.values(UserType).includes(decoded.role)
     ) {
       throw new Error("Token payload is incomplete");
     }
@@ -83,7 +87,8 @@ export const verifyToken = (
 export const extractToken = (
   request: TokenRequest
 ): string | null => {
-  const authorizationHeader = request.headers?.authorization;
+  const authorizationHeader =
+    request.headers?.authorization;
 
   if (authorizationHeader?.startsWith("Bearer ")) {
     return authorizationHeader.substring("Bearer ".length);

@@ -4,42 +4,51 @@ import {
   isAdministratorRole,
 } from "./auth.middleware";
 
+/**
+ * Authorizes a user to hide their own comment.
+ *
+ * - SRP: this function only checks comment ownership.
+ *
+ * - Extract Method: ownership and administrator authorization
+ *   are represented by separate functions.
+ */
 export function authorizeCommentOwner(
   authenticatedUser: AuthenticatedUser,
   commentAuthorId: string | number
 ): NextResponse | null {
-  const authenticatedUserId =
-    String(authenticatedUser.id);
+  const authenticatedUserId = String(
+    authenticatedUser.id
+  );
 
   const ownerId = String(commentAuthorId);
 
-  if (authenticatedUserId !== ownerId) {
-    return NextResponse.json(
-      {
-        error: "Forbidden",
-        message:
-          "Solo puedes ocultar tus propios comentarios.",
-      },
-      { status: 403 }
-    );
+  if (authenticatedUserId === ownerId) {
+    return null;
   }
 
-  return null;
+  return NextResponse.json(
+    {
+      error: "Forbidden",
+      message:
+        "Solo puedes ocultar tus propios comentarios.",
+    },
+    { status: 403 }
+  );
 }
 
 export function authorizeCommentDeletion(
   authenticatedUser: AuthenticatedUser
 ): NextResponse | null {
-  if (!isAdministratorRole(authenticatedUser.role)) {
-    return NextResponse.json(
-      {
-        error: "Forbidden",
-        message:
-          "Solo un administrador puede eliminar comentarios.",
-      },
-      { status: 403 }
-    );
+  if (isAdministratorRole(authenticatedUser.role)) {
+    return null;
   }
 
-  return null;
+  return NextResponse.json(
+    {
+      error: "Forbidden",
+      message:
+        "Solo un administrador puede eliminar comentarios.",
+    },
+    { status: 403 }
+  );
 }
