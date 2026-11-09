@@ -1,233 +1,275 @@
-import { Request, Response } from 'express';
-import { Blog } from '../models/Blog';
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { ContentType } from "../types/enums";
+import {
+  badRequest,
+  databaseError,
+  notFound,
+  readBody,
+} from "./controller.helpers";
 
-import supabase from '../lib/connect';
-
-import { ContentType } from '../types/enums';
-
-let db = supabase.supabase
-
-if(db === null){
-  throw new Error("Database connection is not initialized.");
+interface BlogRequest {
+  title?: string;
+  content?: string;
+  creationDate?: string;
+  expirationDate?: string | null;
+  isVisible?: boolean;
+  eventStartDate?: string;
+  eventEndDate?: string;
+  location?: string | null;
+  registrationUrl?: string | null;
+  imageUrls?: string[];
+  calendarId?: string | null;
+  administratorId?: string | null;
 }
 
 export class BlogController {
-  static async publishPost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to publish post
-      const {blogData} = req.body;
-      if (!blogData) {
-        res.status(400).json({ success: false, message: 'All fields are required' });
-        return;
-      }
+  static async publishPost(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      blogData?: BlogRequest;
+    }>(request);
 
-      const { data, error } = await db
-        .from('blogs')
-        .insert([
-          {
-            title: blogData.title,
-            content: blogData.content,
-            creation_date: blogData.creationDate || new Date(),
-            expiration_date: blogData.expirationDate,
-            is_visible: blogData.isVisible ?? true,
-            view_count: blogData.viewCount || 0,
-            like_count: blogData.likeCount || 0,
-            publication_type: ContentType.BLOG,
-            event_start_date: blogData.eventStartDate,
-            event_end_date: blogData.eventEndDate,
-            location: blogData.location,
-            registration_url: blogData.registrationUrl,
-            image_urls: blogData.imageUrls || [],
-            calendar_id: blogData.calendarId || null,
-            administrator_id: blogData.adminId || null
-          }
-        ])
-        .select();
+    const blogData = body?.blogData;
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Post published', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !blogData?.title ||
+      !blogData.content ||
+      !blogData.eventStartDate ||
+      !blogData.eventEndDate
+    ) {
+      return badRequest(
+        "title, content, eventStartDate y eventEndDate son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Blog")
+      .insert({
+        title: blogData.title.trim(),
+        content: blogData.content.trim(),
+        creationDate:
+          blogData.creationDate ?? new Date().toISOString(),
+        expirationDate:
+          blogData.expirationDate ?? null,
+        isVisible: blogData.isVisible ?? true,
+        viewCount: 0,
+        likeCount: 0,
+        publicationType: ContentType.BLOG,
+        eventStartDate: blogData.eventStartDate,
+        eventEndDate: blogData.eventEndDate,
+        location: blogData.location ?? null,
+        registrationUrl:
+          blogData.registrationUrl ?? null,
+        imageUrls: blogData.imageUrls ?? [],
+        calendarId: blogData.calendarId ?? null,
+        administratorId:
+          blogData.administratorId ?? null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(error, "No se pudo publicar el post.");
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Post published",
+        data,
+      },
+      { status: 201 }
+    );
   }
 
-  static async editPost(req: Request, res: Response): Promise<void> {
-    try {
-      const { title, content } = req.body;
-      const { postId } = req.params;
-      // Logic to edit post
+  static async editPost(
+    request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    const body = await readBody<BlogRequest>(request);
 
-      const { data, error } = await db
-        .from('blogs')
-        .update([
-          {
-            title: title,
-            content: content
-          }
-        ])
-        .eq('id', postId)
-        .select();
-
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'Post edited', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!postId || !body?.title || !body.content) {
+      return badRequest(
+        "postId, title y content son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Blog")
+      .update({
+        title: body.title.trim(),
+        content: body.content.trim(),
+      })
+      .eq("id", postId)
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(error, "No se pudo editar el post.");
+    }
+
+    if (!data) {
+      return notFound("Post no encontrado.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Post edited",
+      data,
+    });
   }
 
-  static async displayPost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to display post
-      const { postId } = req.params;
+  static async displayPost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    const { data, error } = await db
+      .from("Blog")
+      .select("*")
+      .eq("id", postId)
+      .eq("isVisible", true)
+      .single();
 
-      const { error } = await db
-        .from('blogs')
-        .update([
-          {
-            is_visible: true
-          }
-        ])
-        .eq('id', postId)
-        .select();
-
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, data: 'Post content' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (error) {
+      return databaseError(error, "No se pudo consultar el post.");
     }
+
+    if (!data) {
+      return notFound("Post no encontrado.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      data,
+    });
   }
 
-  static async deletePost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to delete post
-      const { postId } = req.params;
-
-      const { error } = await db
-        .from('blogs')
-        .delete()
-        .eq('id', postId);
-
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-
-      res.status(200).json({ success: true, message: 'Post deleted' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+  static async deletePost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    if (!postId) {
+      return badRequest("postId es requerido.");
     }
+
+    const { error } = await db
+      .from("Blog")
+      .delete()
+      .eq("id", postId);
+
+    if (error) {
+      return databaseError(error, "No se pudo eliminar el post.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Post deleted",
+    });
   }
 
-  static async hidePost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to hide post
-      const { postId } = req.params;
+  static async hidePost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    const { data, error } = await db
+      .from("Blog")
+      .update({ isVisible: false })
+      .eq("id", postId)
+      .select()
+      .single();
 
-      const { error } = await db
-        .from('blogs')
-        .update([
-          {
-            is_visible: false
-          }
-        ])
-        .eq('id', postId);
-
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'Post hidden' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (error) {
+      return databaseError(error, "No se pudo ocultar el post.");
     }
+
+    if (!data) {
+      return notFound("Post no encontrado.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Post hidden",
+      data,
+    });
   }
 
-  static async registerView(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to register view
-      const { postId } = req.params;
+  static async registerView(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    const { data, error } = await db
+      .from("Blog")
+      .select("viewCount")
+      .eq("id", postId)
+      .single();
 
-      const { data, error} = await db
-        .from('blogs')
-        .select('*')
-        .eq('id', postId)
-        .single();
-
-      if (error || !data) {
-        res.status(404).json({ success: false, message: 'Blog no encontrado' });
-        return;
-      }
-
-      const updatedViewCount = data.view_count + 1;
-
-      const { error: updateError } = await db
-        .from('blogs')
-        .update([
-          {
-            view_count: updatedViewCount
-          }
-        ])
-        .eq('id', postId);
-
-      if (updateError) {
-        res.status(400).json({ success: false, message: updateError.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'View registered' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (error || !data) {
+      return notFound("Blog no encontrado.");
     }
+
+    const { error: updateError } = await db
+      .from("Blog")
+      .update({
+        viewCount: data.viewCount + 1,
+      })
+      .eq("id", postId);
+
+    if (updateError) {
+      return databaseError(
+        updateError,
+        "No se pudo registrar la vista."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "View registered",
+    });
   }
 
-  static async registerLike(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to register like
-      const { postId } = req.params;
+  static async registerLike(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ): Promise<NextResponse> {
+    const { data, error } = await db
+      .from("Blog")
+      .select("likeCount")
+      .eq("id", postId)
+      .single();
 
-      const { data, error} = await db
-        .from('blogs')
-        .select('*')
-        .eq('id', postId)
-        .single();
-
-      if (error || !data) {
-        res.status(404).json({ success: false, message: 'Blog no encontrado' });
-        return;
-      }
-
-      const updatedLikeCount = data.like_count + 1;
-
-      const { error: updateError } = await db
-        .from('blogs')
-        .update([
-          {
-            like_count: updatedLikeCount
-          }
-        ])
-        .eq('id', postId);
-
-      if (updateError) {
-        res.status(400).json({ success: false, message: updateError.message });
-        return;
-      }
-      res.status(200).json({ success: true, message: 'Like registered' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (error || !data) {
+      return notFound("Blog no encontrado.");
     }
+
+    const { error: updateError } = await db
+      .from("Blog")
+      .update({
+        likeCount: data.likeCount + 1,
+      })
+      .eq("id", postId);
+
+    if (updateError) {
+      return databaseError(
+        updateError,
+        "No se pudo registrar el like."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Like registered",
+    });
   }
 }

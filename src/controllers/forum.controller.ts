@@ -1,43 +1,92 @@
-import { Request, Response } from 'express';
-import { Forum } from '../models/Forum';
-import { Comment } from '../models/Comment';
-
-import supabase from '../lib/connect';
-let db = supabase.supabase
-
-if(db === null){
-  throw new Error("Database connection is not initialized.");
-}
-
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import {
+  badRequest,
+  databaseError,
+} from "./controller.helpers";
 
 export class ForumController {
-  static async displayComments(req: Request, res: Response): Promise<void> {
-    try {
-      const { forumId } = req.body;
-      // Logic to display comments
-      
-      res.status(200).json({ success: true, message: 'Comments displayed' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+  static async displayComments(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const forumId =
+      request.nextUrl.searchParams.get("forumId");
+
+    if (!forumId) {
+      return badRequest("forumId es requerido.");
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .select("*")
+      .eq("forumId", forumId)
+      .eq("isHiddenByAuthor", false)
+      .order("creationDate", {
+        ascending: true,
+      });
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudieron consultar los comentarios."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data,
+    });
   }
 
-  static async addComment(req: Request, res: Response): Promise<void> {
-    try {
-      const { comment } = req.body;
-      // Logic to add comment
-      res.status(200).json({ success: true, message: 'Comment added' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
+  static async addComment(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await request.json().catch(() => null);
+    const comment = body?.comment;
 
-  static async removeExpiredComments(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to remove expired comments
-      res.status(200).json({ success: true, message: 'Expired comments removed' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !comment?.content ||
+      !comment.authorId ||
+      !comment.forumId
+    ) {
+      return badRequest(
+        "content, authorId y forumId son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .insert({
+        content: comment.content.trim(),
+        authorId: comment.authorId,
+        forumId: comment.forumId,
+        parentCommentId:
+          comment.parentCommentId ?? null,
+        likeCount: 0,
+        isHiddenByAuthor: false,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo agregar el comentario."
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Comment added",
+        data,
+      },
+      { status: 201 }
+    );
   }
 }

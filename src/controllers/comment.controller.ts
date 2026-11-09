@@ -1,148 +1,244 @@
-import { Request, Response } from 'express';
-import { Comment } from '../models/Comment';
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import {
+  badRequest,
+  databaseError,
+  notFound,
+  readBody,
+} from "./controller.helpers";
 
-import supabase from '../lib/connect';
+interface CommentRequest {
+  content?: string;
+  creationDate?: string;
+  authorId?: string;
+  author?: {
+    id?: string;
+  };
+  forumId?: string;
+  parentCommentId?: string | null;
+}
 
-
-let db = supabase.supabase
-
-if(db === null){
-  throw new Error("Database connection is not initialized.");
+function getAuthorId(
+  comment: CommentRequest
+): string | undefined {
+  return comment.authorId ?? comment.author?.id;
 }
 
 export class CommentController {
-  static async publishComment(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to publish comment
-      const { comment } = req.body;
-      if (!comment) {
-        res.status(400).json({ success: false, message: 'All fields are required' });
-        return;
-      }
+  static async publishComment(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      comment?: CommentRequest;
+    }>(request);
 
-      const { data, error } = await db
-        .from('comments') 
-        .insert([{
-          content: comment.content,
-          creation_date: comment.creationDate || new Date(),
-          like_count: comment.likeCount || 0,
-          is_hidden_by_author: comment.isHiddenByAuthor || false,
-          author_id: comment.author.id,
-          forum_id: comment.forumId,
-          parent_comment_id: null  // For replies, otherwise null
-        }])
-        .select(); 
+    const comment = body?.comment;
+    const authorId = comment
+      ? getAuthorId(comment)
+      : undefined;
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Comment published', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !comment?.content ||
+      !authorId ||
+      !comment.forumId
+    ) {
+      return badRequest(
+        "content, authorId y forumId son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .insert({
+        content: comment.content.trim(),
+        creationDate:
+          comment.creationDate ?? new Date().toISOString(),
+        likeCount: 0,
+        isHiddenByAuthor: false,
+        authorId,
+        forumId: comment.forumId,
+        parentCommentId: null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo publicar el comentario."
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Comment published",
+        data,
+      },
+      { status: 201 }
+    );
   }
 
-  static async hideComment(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to hide comment
-      const { commentId } = req.body;
-      const { data, error } = await db
-        .from('comments')
-        .update([
-          {
-            is_hidden_by_author: true
-          }
-        ])
-        .eq('id', commentId)
-        .select();
+  static async hideComment(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{ commentId?: string }>(
+      request
+    );
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'Comment hidden', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!body?.commentId) {
+      return badRequest("commentId es requerido.");
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .update({ isHiddenByAuthor: true })
+      .eq("id", body.commentId)
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo ocultar el comentario."
+      );
+    }
+
+    if (!data) {
+      return notFound("Comentario no encontrado.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Comment hidden",
+      data,
+    });
   }
 
-  static async displayComment(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to display comment
-      const { commentId } = req.body;
-      const { data, error } = await db
-        .from('comments')
-        .update([
-          {
-            is_hidden_by_author: false
-          }
-        ])
-        .eq('id', commentId)
-        .select();
+  static async displayComment(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{ commentId?: string }>(
+      request
+    );
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      res.status(200).json({ success: true, data: data[0] });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!body?.commentId) {
+      return badRequest("commentId es requerido.");
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .select("*")
+      .eq("id", body.commentId)
+      .eq("isHiddenByAuthor", false)
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo consultar el comentario."
+      );
+    }
+
+    if (!data) {
+      return notFound("Comentario no encontrado.");
+    }
+
+    return NextResponse.json({
+      success: true,
+      data,
+    });
   }
 
-  static async deleteComment(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to delete comment
-      const { commentId } = req.body;
-      const { error } = await db
-        .from('comments')
-        .delete()
-        .eq('id', commentId);
+  static async deleteComment(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{ commentId?: string }>(
+      request
+    );
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Comment deleted' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!body?.commentId) {
+      return badRequest("commentId es requerido.");
     }
+
+    const { error } = await db
+      .from("Comment")
+      .delete()
+      .eq("id", body.commentId);
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo eliminar el comentario."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Comment deleted",
+    });
   }
 
-  static async addReply(req: Request, res: Response): Promise<void> {
-    try {
-      const { reply } = req.body;
-      // Logic to add reply
-      if (!reply) {
-        res.status(400).json({ success: false, message: 'All fields are required' });
-        return;
-      }
+  static async addReply(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      reply?: CommentRequest;
+    }>(request);
 
-      const { data, error } = await db
-        .from('comments') 
-        .insert([{
-          content: reply.content,
-          creation_date: reply.creationDate || new Date(),
-          like_count: reply.likeCount || 0,
-          is_hidden_by_author: reply.isHiddenByAuthor || false,
-          author_id: reply.author.id,
-          forum_id: reply.forumId,
-          parent_comment_id: reply.parentCommentId 
-        }])
-        .select(); 
+    const reply = body?.reply;
+    const authorId = reply
+      ? getAuthorId(reply)
+      : undefined;
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Reply added', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !reply?.content ||
+      !authorId ||
+      !reply.forumId ||
+      !reply.parentCommentId
+    ) {
+      return badRequest(
+        "content, authorId, forumId y parentCommentId son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Comment")
+      .insert({
+        content: reply.content.trim(),
+        creationDate:
+          reply.creationDate ?? new Date().toISOString(),
+        likeCount: 0,
+        isHiddenByAuthor: false,
+        authorId,
+        forumId: reply.forumId,
+        parentCommentId: reply.parentCommentId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo agregar la respuesta."
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Reply added",
+        data,
+      },
+      { status: 201 }
+    );
   }
 }

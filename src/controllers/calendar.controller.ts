@@ -1,182 +1,280 @@
-import { Request, Response } from 'express';
-import { Calendar } from '../models/Calendar';
-import { Blog } from '../models/Blog';
-import { User } from '../models/User';
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { ContentType } from "../types/enums";
+import {
+  badRequest,
+  databaseError,
+  readBody,
+} from "./controller.helpers";
 
-import supabase from '../lib/connect';
-import { ContentType } from '../types/enums';
-
-
-let db = supabase.supabase
-
-if(db === null){
-  throw new Error("Database connection is not initialized.");
+interface EventRequest {
+  title?: string;
+  content?: string;
+  creationDate?: string;
+  expirationDate?: string | null;
+  isVisible?: boolean;
+  eventStartDate?: string;
+  eventEndDate?: string;
+  location?: string | null;
+  registrationUrl?: string | null;
+  imageUrls?: string[];
+  calendarId?: string | null;
+  administratorId?: string | null;
 }
 
-
 export class CalendarController {
-  static async registerEvent(req: Request, res: Response): Promise<void> {
-    try {
-      const { eventData } = req.body;
-      // Logic to register event
-      if (!eventData) {
-        res.status(400).json({ success: false, message: 'All fields are required' });
-        return;
-      }
+  static async registerEvent(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      eventData?: EventRequest;
+    }>(request);
 
-      const { data, error } = await db
-        .from('blogs')
-        .insert([
-          {
-            title: eventData.title,
-            content: eventData.content,
-            creation_date: eventData.creationDate || new Date(),
-            expiration_date: eventData.expirationDate,
-            is_visible: eventData.isVisible ?? true,
-            view_count: eventData.viewCount || 0,
-            like_count: eventData.likeCount || 0,
-            publication_type: ContentType.EVENT,
-            event_start_date: eventData.eventStartDate,
-            event_end_date: eventData.eventEndDate,
-            location: eventData.location,
-            registration_url: eventData.registrationUrl,
-            image_urls: eventData.imageUrls || [],
-            calendar_id: eventData.calendarId || null,
-            administrator_id: eventData.adminId || null
-          }
-        ])
-        .select(); 
+    const eventData = body?.eventData;
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Event registered', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !eventData?.title ||
+      !eventData.content ||
+      !eventData.eventStartDate ||
+      !eventData.eventEndDate
+    ) {
+      return badRequest(
+        "title, content, eventStartDate y eventEndDate son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Blog")
+      .insert({
+        title: eventData.title.trim(),
+        content: eventData.content.trim(),
+        creationDate:
+          eventData.creationDate ?? new Date().toISOString(),
+        expirationDate:
+          eventData.expirationDate ?? null,
+        isVisible: eventData.isVisible ?? true,
+        viewCount: 0,
+        likeCount: 0,
+        publicationType: ContentType.EVENT,
+        eventStartDate: eventData.eventStartDate,
+        eventEndDate: eventData.eventEndDate,
+        location: eventData.location ?? null,
+        registrationUrl:
+          eventData.registrationUrl ?? null,
+        imageUrls: eventData.imageUrls ?? [],
+        calendarId: eventData.calendarId ?? null,
+        administratorId:
+          eventData.administratorId ?? null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo registrar el evento."
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Event registered",
+        data,
+      },
+      { status: 201 }
+    );
   }
 
-  static async editEvent(req: Request, res: Response): Promise<void> {
-    try {
-      const { eventData } = req.body;
-      const { eventId } = req.params;
-      // Logic to edit event
+  static async editEvent(
+    request: NextRequest,
+    db: SupabaseClient,
+    eventId: string
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      eventData?: EventRequest;
+    }>(request);
 
-      const { data, error } = await db
-        .from('blogs')
-        .update([
-          {
-            title: eventData.title,
-            content: eventData.content
-            //agregar campos adicionales según sea necesario
-          }
-        ])
-        .eq('id', eventId)
-        .select();
+    const eventData = body?.eventData;
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      res.status(200).json({ success: true, message: 'Event edited', data: data });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!eventId || !eventData) {
+      return badRequest(
+        "eventId y eventData son requeridos."
+      );
     }
+
+    const { data, error } = await db
+      .from("Blog")
+      .update({
+        title: eventData.title,
+        content: eventData.content,
+        eventStartDate: eventData.eventStartDate,
+        eventEndDate: eventData.eventEndDate,
+        location: eventData.location,
+        registrationUrl: eventData.registrationUrl,
+      })
+      .eq("id", eventId)
+      .eq("publicationType", ContentType.EVENT)
+      .select()
+      .single();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo editar el evento."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Event edited",
+      data,
+    });
   }
 
-  static async hideEvent(req: Request, res: Response): Promise<void> {
-    try {
-      const { eventId } = req.body;
-      // Logic to hide event
-      const { error } = await db
-        .from('blogs')
-        .update([
-          {
-            is_visible: false
-          }
-        ])
-        .eq('id', eventId);
+  static async hideEvent(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{ eventId?: string }>(
+      request
+    );
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'Event hidden' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!body?.eventId) {
+      return badRequest("eventId es requerido.");
     }
+
+    const { error } = await db
+      .from("Blog")
+      .update({ isVisible: false })
+      .eq("id", body.eventId)
+      .eq("publicationType", ContentType.EVENT);
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo ocultar el evento."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Event hidden",
+    });
   }
 
-  static async deleteEvent(req: Request, res: Response): Promise<void> {
-    try {
-      const { eventId } = req.body;
-      // Logic to delete event
-      const { error } = await db
-        .from('blogs')
-        .delete()
-        .eq('id', eventId);
+  static async deleteEvent(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{ eventId?: string }>(
+      request
+    );
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      
-      res.status(200).json({ success: true, message: 'Event deleted' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (!body?.eventId) {
+      return badRequest("eventId es requerido.");
     }
+
+    const { error } = await db
+      .from("Blog")
+      .delete()
+      .eq("id", body.eventId)
+      .eq("publicationType", ContentType.EVENT);
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudo eliminar el evento."
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Event deleted",
+    });
   }
 
-  static async displayEvents(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to display events
-      const { data, error } = await db
-        .from('blogs')
-        .select('*')
-        .eq('publication_type', ContentType.EVENT)
-        .eq('is_visible', true)
-        .order('creation_date', { ascending: false });
+  static async displayEvents(
+    _request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const { data, error } = await db
+      .from("Blog")
+      .select("*")
+      .eq("publicationType", ContentType.EVENT)
+      .eq("isVisible", true)
+      .order("eventStartDate", {
+        ascending: true,
+      });
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-      res.status(200).json({ success: true, data: data });
-
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudieron consultar los eventos."
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      data,
+    });
   }
 
-  static async requestEventNotification(req: Request, res: Response): Promise<void> {
-    try {
-      const { event, recipients } = req.body;
-      const { error } = await db
-        .from('event_notifications')
-        .insert([
-          {
-            event_id: event.id, // Las notifivaciones están asociadas a un evento específico? o solo sueltas?
-            notification_time: new Date(),
-            title: event.title,
-            content: event.content,
-            is_read: false,
-            recipient_id: recipients[0], // Assuming the first recipient is the one to notify
-            notification_type: 'EVENT_NOTIFICATION'
-          }
-        ])
-        .select(); 
+  static async requestEventNotification(
+    request: NextRequest,
+    db: SupabaseClient
+  ): Promise<NextResponse> {
+    const body = await readBody<{
+      event?: {
+        title?: string;
+        content?: string;
+      };
+      recipients?: string[];
+    }>(request);
 
-      if (error) {
-        res.status(400).json({ success: false, message: error.message });
-        return;
-      }
-
-      res.status(200).json({ success: true, message: 'Event notification requested' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
+    if (
+      !body?.event?.title ||
+      !body.event.content ||
+      !body.recipients?.length
+    ) {
+      return badRequest(
+        "event y recipients son requeridos."
+      );
     }
+
+    const notifications = body.recipients.map(
+      (recipientId) => ({
+        title: body.event?.title,
+        content: body.event?.content,
+        isRead: false,
+        recipientId,
+        notificationType: "EVENT_NOTIFICATION",
+      })
+    );
+
+    const { data, error } = await db
+      .from("Notification")
+      .insert(notifications)
+      .select();
+
+    if (error) {
+      return databaseError(
+        error,
+        "No se pudieron crear las notificaciones."
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Event notification requested",
+        data,
+      },
+      { status: 201 }
+    );
   }
 }
