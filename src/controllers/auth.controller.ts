@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { AuthenticatedUser } from "../middlewares/auth.middleware";
-import { UserType } from "../types/enums";
+import { AuthService } from "../services/auth.service";
 
 export class AuthController {
   /**
@@ -21,7 +21,7 @@ export class AuthController {
     }
 
     const hasPermission =
-      user.role === UserType.ADMINISTRATOR;
+      AuthService.checkPermission(user);
 
     return NextResponse.json({
       success: true,
