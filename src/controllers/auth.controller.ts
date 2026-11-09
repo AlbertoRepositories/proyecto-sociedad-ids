@@ -91,6 +91,7 @@ export class AuthController {
         return;
       }
       // Logic to check permission
+<<<<<<< HEAD
       const { data, error } = await db
         .from('whitelist')
         .select('*')
@@ -103,6 +104,11 @@ export class AuthController {
       }
       
       res.status(200).json({ success: true, hasPermission: true,data: data });
+=======
+
+      
+      res.status(200).json({ success: true, hasPermission: true });
+>>>>>>> 9139e7ff2e0c4839f278d58452cc29e0559c2e63
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }
