@@ -7,10 +7,6 @@ import { ContentType } from '../types/enums';
 
 let db = supabase.supabase
 
-if(db === null){
-  throw new Error("Database connection is not initialized.");
-}
-
 export class BlogController {
   static async publishPost(req: Request, res: Response): Promise<void> {
     try {

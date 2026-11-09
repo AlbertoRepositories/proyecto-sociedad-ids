@@ -9,10 +9,6 @@ import { ContentType } from '../types/enums';
 
 let db = supabase.supabase
 
-if(db === null){
-  throw new Error("Database connection is not initialized.");
-}
-
 
 export class CalendarController {
   static async registerEvent(req: Request, res: Response): Promise<void> {

@@ -6,10 +6,6 @@ import supabase from '../lib/connect';
 
 let db = supabase.supabase
 
-if(db === null){
-  throw new Error("Database connection is not initialized.");
-}
-
 export class CommentController {
   static async publishComment(req: Request, res: Response): Promise<void> {
     try {

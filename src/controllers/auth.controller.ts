@@ -4,10 +4,6 @@ import { User } from '../models/User';
 import supabase from '../lib/connect';
 let db = supabase.supabase
 
-if(db === null){
-  throw new Error("Database connection is not initialized.");
-}
-
 export class AuthController {
   static async addEmail(req: Request, res: Response): Promise<void> {
     try {
@@ -95,9 +91,18 @@ export class AuthController {
         return;
       }
       // Logic to check permission
-
+      const { data, error } = await db
+        .from('whitelist')
+        .select('*')
+        .eq('email', user.email)
+        .single();
       
-      res.status(200).json({ success: true, hasPermission: true });
+      if (error) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+      
+      res.status(200).json({ success: true, hasPermission: true,data: data });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }
