@@ -1,68 +1,95 @@
-import { Request, Response } from 'express';
-import { Blog } from '../models/Blog';
+import { NextRequest, NextResponse } from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { parseBlogInput } from "../dtos/crud.dto";
+import { BlogService } from "../services/blog.service";
+import {
+  badRequest,
+  databaseError,
+  notFound,
+  readBody,
+} from "./controller.helpers";
 
 export class BlogController {
-  static async publishPost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to publish post
-      res.status(200).json({ success: true, message: 'Post published' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async publishPost(request: NextRequest, db: SupabaseClient) {
+    const body = await readBody<unknown>(request);
+    const input = parseBlogInput(
+      typeof body === "object" && body !== null && "blogData" in body
+        ? (body as { blogData: unknown }).blogData
+        : body
+    );
+    if (!input) return badRequest("Invalid blog data.");
+
+    const result = await BlogService.publishPost(db, input);
+    if (result.error) return databaseError(result.error, "Could not publish the post.");
+    return NextResponse.json({ success: true, data: result.data }, { status: 201 });
   }
 
-  static async editPost(req: Request, res: Response): Promise<void> {
-    try {
-      const { title, content } = req.body;
-      // Logic to edit post
-      res.status(200).json({ success: true, message: 'Post edited' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async editPost(
+    request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const body = await readBody<unknown>(request);
+    const input = parseBlogInput(body);
+    if (!input) return badRequest("Invalid blog data.");
+
+    const result = await BlogService.editPost(db, postId, input);
+    if (result.error) return databaseError(result.error, "Could not edit the post.");
+    if (!result.data) return notFound("Post not found.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 
-  static async displayPost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to display post
-      res.status(200).json({ success: true, data: 'Post content' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async displayPost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const result = await BlogService.displayPost(db, postId);
+    if (result.error) return databaseError(result.error, "Could not find the post.");
+    if (!result.data) return notFound("Post not found.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 
-  static async deletePost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to delete post
-      res.status(200).json({ success: true, message: 'Post deleted' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async deletePost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const result = await BlogService.deletePost(db, postId);
+    if (result.error) return databaseError(result.error, "Could not delete the post.");
+    return NextResponse.json({ success: true });
   }
 
-  static async hidePost(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to hide post
-      res.status(200).json({ success: true, message: 'Post hidden' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async hidePost(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const result = await BlogService.hidePost(db, postId);
+    if (result.error) return databaseError(result.error, "Could not hide the post.");
+    if (!result.data) return notFound("Post not found.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 
-  static async registerView(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to register view
-      res.status(200).json({ success: true, message: 'View registered' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async registerView(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const result = await BlogService.registerView(db, postId);
+    if (result.error) return databaseError(result.error, "Could not register the view.");
+    if (!result.data) return notFound("Post not found.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 
-  static async registerLike(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to register like
-      res.status(200).json({ success: true, message: 'Like registered' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async registerLike(
+    _request: NextRequest,
+    db: SupabaseClient,
+    postId: string
+  ) {
+    const result = await BlogService.registerLike(db, postId);
+    if (result.error) return databaseError(result.error, "Could not register the like.");
+    if (!result.data) return notFound("Post not found.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 }

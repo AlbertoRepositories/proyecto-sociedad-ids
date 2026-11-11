@@ -2,7 +2,7 @@ import jwt, {
   JwtPayload,
   SignOptions,
 } from "jsonwebtoken";
-import configService from "./config.service.js";
+import configService from "./config.service";
 import { Logger } from "../logger/logger";
 import { UserType } from "../types/enums";
 

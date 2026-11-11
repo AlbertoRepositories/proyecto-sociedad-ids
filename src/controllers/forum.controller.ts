@@ -1,33 +1,33 @@
-import { Request, Response } from 'express';
-import { Forum } from '../models/Forum';
-import { Comment } from '../models/Comment';
+import { NextRequest, NextResponse } from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { ForumService } from "../services/forum.service";
+import { CommentService } from "../services/comment.service";
+import { parseCommentInput } from "../dtos/crud.dto";
+import {
+  badRequest,
+  databaseError,
+  readBody,
+} from "./controller.helpers";
 
 export class ForumController {
-  static async displayComments(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to display comments
-      res.status(200).json({ success: true, message: 'Comments displayed' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async displayComments(request: NextRequest, db: SupabaseClient) {
+    const forumId = request.nextUrl.searchParams.get("forumId");
+    if (!forumId) return badRequest("forumId is required.");
+    const result = await ForumService.displayComments(db, forumId);
+    if (result.error) return databaseError(result.error, "Could not find comments.");
+    return NextResponse.json({ success: true, data: result.data });
   }
 
-  static async addComment(req: Request, res: Response): Promise<void> {
-    try {
-      const { comment } = req.body;
-      // Logic to add comment
-      res.status(200).json({ success: true, message: 'Comment added' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-
-  static async removeExpiredComments(req: Request, res: Response): Promise<void> {
-    try {
-      // Logic to remove expired comments
-      res.status(200).json({ success: true, message: 'Expired comments removed' });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
+  static async addComment(request: NextRequest, db: SupabaseClient) {
+    const body = await readBody<unknown>(request);
+    const value =
+      typeof body === "object" && body !== null && "comment" in body
+        ? (body as { comment: unknown }).comment
+        : body;
+    const input = parseCommentInput(value);
+    if (!input) return badRequest("Invalid comment data.");
+    const result = await CommentService.publishComment(db, input);
+    if (result.error) return databaseError(result.error, "Could not add comment.");
+    return NextResponse.json({ success: true, data: result.data }, { status: 201 });
   }
 }
