@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
-import { withDatabase } from "../../../../middlewares/database.middleware";
-import { withAdministrator, withAuthenticatedUser } from "../../route.helpers";
-import { CalendarController } from "../../../../controllers/calendar.controller";
+import { withDatabase } from "../../../middlewares/database.middleware";
+import {
+  withAdministrator,
+  withAuthenticatedUser,
+} from "../route.helpers";
+import { CalendarController } from "../../../controllers/calendar.controller";
 
 export const GET = withDatabase(
   withAuthenticatedUser((request, db) =>
