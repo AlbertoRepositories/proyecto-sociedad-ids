@@ -1,0 +1,495 @@
+{
+  "info": {
+    "_postman_id": "9e93d8ce-1191-4db9-9866-2c69c82d332d",
+    "name": "Sociedad IDS Blog y Publicaciones",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53437938",
+    "_collection_link": "https://go.postman.co/collection/53437938-9e93d8ce-1191-4db9-9866-2c69c82d332d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Publicación de prueba de Alberto\",\r\n  \"content\": \"Contenido temporal para validar el CRUD de Blog.\",\r\n  \"publicationType\": \"BLOG\",\r\n  \"eventStartDate\": \"2026-11-15T10:00:00.000Z\",\r\n  \"eventEndDate\": \"2026-11-15T12:00:00.000Z\",\r\n  \"expirationDate\": null,\r\n  \"location\": \"Aula de pruebas\",\r\n  \"registrationUrl\": null,\r\n  \"imageUrls\": [],\r\n  \"calendarId\": null,\r\n  \"administratorId\": null,\r\n  \"isVisible\": true\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/blog",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Edit Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Publicación editada de Alberto\",\r\n  \"content\": \"Contenido actualizado desde Postman.\",\r\n  \"publicationType\": \"BLOG\",\r\n  \"eventStartDate\": \"2026-11-15T10:00:00.000Z\",\r\n  \"eventEndDate\": \"2026-11-15T12:00:00.000Z\",\r\n  \"expirationDate\": null,\r\n  \"location\": \"Aula de pruebas\",\r\n  \"registrationUrl\": null,\r\n  \"imageUrls\": [],\r\n  \"calendarId\": null,\r\n  \"administratorId\": null,\r\n  \"isVisible\": true\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "View Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad/view",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad",
+            "view"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad/like",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad",
+            "like"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Hide Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad/hide",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad",
+            "hide"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Blog (SUCCESS)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Blog (FAIL permisos admin y body inválido)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0xl5}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"content\": \"Contenido de prueba.\",\r\n  \"publicationType\": \"BLOG\",\r\n  \"eventStartDate\": \"2026-11-15T10:00:00.000Z\",\r\n  \"eventEndDate\": \"2026-11-15T12:00:00.000Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/blog",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Blog (FAIL non existent post)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0xl5}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Edit Blog (FAIL without content in body)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0xl5}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Título actualizado\",\r\n  \"content\": \"\",\r\n  \"publicationType\": \"BLOG\",\r\n  \"eventStartDate\": \"2026-11-15T10:00:00.000Z\",\r\n  \"eventEndDate\": \"2026-11-15T12:00:00.000Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/blog/29c4ba22-3b0d-44d8-9493-dbea9b27dc7c",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "29c4ba22-3b0d-44d8-9493-dbea9b27dc7c"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "View Blog (FAIL not logged in)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "addssdsad",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/29c4ba22-3b0d-44d8-9493-dbea9b27dc7c/view",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "29c4ba22-3b0d-44d8-9493-dbea9b27dc7c",
+            "view"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like Blog (FAIL it allows more than 1 like per user)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0xl5}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/29c4ba22-3b0d-44d8-9493-dbea9b27dc7c/like",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "29c4ba22-3b0d-44d8-9493-dbea9b27dc7c",
+            "like"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Hide Post (FAIL, without admin permissions)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0xl5}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/f1415600-1696-43f4-acd0-1933908251ad/hide",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "f1415600-1696-43f4-acd0-1933908251ad",
+            "hide"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE Blog (FAIL non existent post)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{json_web_token_0axn}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/blog/c4ac1967-174d-4907-8240-a1c66b2321c7",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "blog",
+            "c4ac1967-174d-4907-8240-a1c66b2321c7"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_0axn",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0xl5",
+      "secret": true
+    }
+  ]
+}
