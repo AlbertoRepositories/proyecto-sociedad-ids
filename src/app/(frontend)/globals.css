@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@keyframes marquee-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.marquee-track-left {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: max-content !important;
+  animation: marquee-left 28s linear infinite;
+}
+
+.marquee-track-right {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: max-content !important;
+  animation: marquee-right 32s linear infinite;
+}
+
+.marquee-container:hover .marquee-track-left,
+.marquee-container:hover .marquee-track-right {
+  animation-play-state: paused;
+}
+
+@keyframes border-march {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+
+.racoode-card-svg rect {
+  fill: none;
+  stroke: #9747FF;
+  stroke-width: 6;
+  stroke-dasharray: 10 8;
+  transition: stroke 0.25s ease;
+}
+
+.racoode-card-link:hover .racoode-card-svg rect {
+  stroke: #FFFAEA;
+  animation: border-march 0.8s linear infinite;
+}
