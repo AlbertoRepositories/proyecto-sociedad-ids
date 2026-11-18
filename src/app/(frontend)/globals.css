@@ -57,3 +57,64 @@
   stroke: #FFFAEA;
   animation: border-march 0.8s linear infinite;
 }
+/* Animación de paseo continuo para la mascota Blobatar del Navbar */
+@keyframes blobPatrolX {
+  0%, 100% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(156px);
+  }
+}
+
+@keyframes blobHopY {
+  0%, 100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+  25% {
+    transform: translateY(-4px) scale(0.97, 1.03);
+  }
+  50% {
+    transform: translateY(0px) scale(1.03, 0.97);
+  }
+  75% {
+    transform: translateY(-4px) scale(0.97, 1.03);
+  }
+}
+
+/* Salto alto al hacer clic */
+@keyframes blobClickJump {
+  0% {
+    transform: translateY(0px) scale(1.12, 0.85);
+  }
+  40% {
+    transform: translateY(-18px) scale(0.9, 1.12);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.04, 0.96);
+  }
+  100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+}
+
+.racoode-pet-patrol {
+  animation: blobPatrolX 9s linear infinite;
+}
+
+.racoode-pet-hop {
+  animation: blobHopY 0.9s ease-in-out infinite;
+}
+
+.racoode-pet-jump {
+  animation: blobClickJump 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Se detiene únicamente al pasar el cursor directamente sobre el Blobatar */
+.racoode-pet-patrol:hover {
+  animation-play-state: paused;
+}
+
+.racoode-pet-patrol:hover .racoode-pet-hop {
+  animation-play-state: paused;
+}

@@ -106,12 +106,14 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* 1. HERO CON ANIMACIÓN REACTIVA AL MOUSE */}
+      {/* 1. HERO CON ANIMACIÓN REACTIVA AL MOUSE (Ajustado al alto real de pantalla) */}
       <section
         style={{
           position: "relative",
           width: "100%",
-          height: "760px",
+          height: "calc(100dvh - 88px)",
+          minHeight: "480px",
+          maxHeight: "820px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
@@ -127,14 +129,14 @@ export default function LandingPage() {
             width: "100%",
             maxWidth: "1280px",
             margin: "0 auto",
-            padding: "0 41px 36px 41px",
+            padding: "0 clamp(20px, 4vw, 41px) clamp(24px, 4vh, 40px) clamp(20px, 4vw, 41px)",
             pointerEvents: "none",
           }}
         >
           <h1
             style={{
               fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(72px, 11vw, 130px)",
+              fontSize: "clamp(64px, 10.5vw, 130px)",
               lineHeight: 0.88,
               fontWeight: 400,
               color: "#FFFAEA",
@@ -146,7 +148,7 @@ export default function LandingPage() {
           <p
             style={{
               fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(20px, 2.5vw, 25px)",
+              fontSize: "clamp(18px, 2.4vw, 25px)",
               lineHeight: 1.2,
               fontWeight: 400,
               color: "#FFFAEA",
@@ -189,11 +191,11 @@ export default function LandingPage() {
                 style={{
                   display: "inline-block",
                   fontFamily: lalezar.style.fontFamily,
-                  fontSize: "30px",
+                  fontSize: "clamp(24px, 3vw, 30px)",
                   lineHeight: "39px",
                   fontWeight: 400,
                   color: "#FFFAEA",
-                  margin: "0 42px",
+                  margin: "0 clamp(24px, 3.5vw, 42px)",
                   whiteSpace: "nowrap",
                   userSelect: "none",
                 }}
@@ -211,20 +213,20 @@ export default function LandingPage() {
           width: "100%",
           maxWidth: "1280px",
           margin: "0 auto",
-          padding: "70px 41px 80px 41px",
+          padding: "clamp(48px, 6vw, 70px) clamp(20px, 4vw, 41px) clamp(56px, 7vw, 80px) clamp(20px, 4vw, 41px)",
         }}
       >
         <div
           style={{
             maxWidth: "762px",
-            margin: "0 auto 65px auto",
+            margin: "0 auto clamp(40px, 5vw, 65px) auto",
             textAlign: "center",
           }}
         >
           <h2
             style={{
               fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(36px, 5vw, 50px)",
+              fontSize: "clamp(34px, 5vw, 50px)",
               lineHeight: 1.15,
               fontWeight: 400,
               color: "#FFFAEA",
@@ -237,7 +239,7 @@ export default function LandingPage() {
           <p
             style={{
               fontFamily: jost.style.fontFamily,
-              fontSize: "clamp(20px, 2.8vw, 30px)",
+              fontSize: "clamp(18px, 2.6vw, 30px)",
               lineHeight: 1.3,
               fontWeight: 400,
               color: "#FFFAEA",
@@ -256,7 +258,7 @@ export default function LandingPage() {
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "center",
-            gap: "45px",
+            gap: "clamp(24px, 3.5vw, 45px)",
           }}
         >
           {CARDS.map((card) => (
@@ -266,7 +268,7 @@ export default function LandingPage() {
               className="racoode-card-item"
               style={{
                 position: "relative",
-                width: "355px",
+                width: "min(355px, 100%)",
                 height: "376px",
                 backgroundColor: "#9FA1FF",
                 borderRadius: "15px",
@@ -293,8 +295,8 @@ export default function LandingPage() {
                   className="racoode-card-dash"
                   x="2"
                   y="2"
-                  width="351"
-                  height="372"
+                  width="calc(100% - 4px)"
+                  height="calc(100% - 4px)"
                   rx="15"
                   ry="15"
                   fill="none"
@@ -309,8 +311,8 @@ export default function LandingPage() {
                   position: "relative",
                   zIndex: 10,
                   fontFamily: lalezar.style.fontFamily,
-                  fontSize: "50px",
-                  lineHeight: "50px",
+                  fontSize: "clamp(38px, 4.5vw, 50px)",
+                  lineHeight: 1,
                   fontWeight: 400,
                   color: "#FFFAEA",
                   textAlign: "center",
@@ -339,21 +341,26 @@ export default function LandingPage() {
       </section>
 
       {/* 4. "CONOCE AL EQUIPO" + CARRUSEL HORIZONTAL DE 2 FILAS */}
-      <section style={{ width: "100%", padding: "40px 0 110px 0" }}>
+      <section
+        style={{
+          width: "100%",
+          padding: "clamp(30px, 4vw, 40px) 0 clamp(70px, 8vw, 110px) 0",
+        }}
+      >
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             textAlign: "center",
-            marginBottom: "55px",
+            marginBottom: "clamp(36px, 4.5vw, 55px)",
             padding: "0 24px",
           }}
         >
           <h2
             style={{
               fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(38px, 5vw, 50px)",
+              fontSize: "clamp(36px, 5vw, 50px)",
               lineHeight: 1.15,
               fontWeight: 400,
               color: "#FFFAEA",

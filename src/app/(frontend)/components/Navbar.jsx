@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Jost } from "next/font/google";
 import { apiFetch } from "../../../lib/api";
+import Blobatar from "./Blobatar";
 
 const jost = Jost({ subsets: ["latin"] });
 
@@ -31,6 +32,12 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [petJumping, setPetJumping] = useState(false);
+
+  const triggerPetJump = () => {
+    setPetJumping(false);
+    requestAnimationFrame(() => setPetJumping(true));
+  };
 
   const links = [
     { href: "/forum", label: "Forum" },
@@ -99,7 +106,6 @@ export default function Navbar() {
 
   const displayEmail = user?.email || "Inicia sesión para ver tu cuenta";
   const roleLabel = user?.role || (user ? "Estudiante IDS" : "Invitado");
-  const initial = user ? displayName.charAt(0).toUpperCase() : "?";
 
   return (
     <header className="w-full bg-[#010736]/90 backdrop-blur-md px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 z-50">
@@ -133,8 +139,40 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Lado derecho: Contact Us + Botón (=) que se transforma en (X) */}
-      <div className="flex items-center gap-5 relative" ref={menuRef}>
+      {/* Lado derecho: Mascota Blobatar + Contact Us + Botón (=) / (X) */}
+      <div className="flex items-center gap-4 md:gap-5 relative" ref={menuRef}>
+        {/* Zona de paseo ampliada del Blobatar */}
+        <div
+          title="¡Hola! Haz clic para que salte"
+          className="hidden md:flex items-end w-48 h-11 relative select-none"
+        >
+          {/* Suelo sutil por donde camina */}
+          <div className="w-full h-[1.5px] bg-gradient-to-r from-transparent via-[#9FA1FF]/40 to-transparent rounded-full" />
+
+          {/* Mascota caminando constantemente (solo eje X) */}
+          <div
+            onClick={triggerPetJump}
+            className="racoode-pet-patrol absolute bottom-1 left-0 cursor-pointer"
+          >
+            {/* Contenedor exclusivo para el salto al hacer clic (solo eje Y) */}
+            <div
+              onAnimationEnd={() => setPetJumping(false)}
+              className={petJumping ? "racoode-pet-jump" : ""}
+            >
+              {/* Contenedor de los pasitos suaves */}
+              <div className="racoode-pet-hop flex flex-col items-center">
+                <Blobatar
+                  seed={user?.avatarSeed || user?.email || user?.username || "racoode-pet"}
+                  size={36}
+                  interactive={true}
+                />
+                {/* Sombrita en el suelo */}
+                <div className="w-5 h-1 rounded-full bg-black/45 blur-[1px] -mt-0.5" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <Link
           href="#contact"
           className="px-6 py-2 rounded-full border-2 border-[#FFFAEA] text-[#FFFAEA] text-xs md:text-sm tracking-wider uppercase hover:bg-[#FFFAEA] hover:text-[#010736] transition-colors"
@@ -170,11 +208,13 @@ export default function Navbar() {
               Actualmente en
             </p>
 
-            {/* Tarjeta de la cuenta activa */}
+            {/* Tarjeta de la cuenta activa con Blobatar */}
             <div className="flex items-center gap-3.5 p-3 rounded-xl border-2 border-[#9747FF] bg-[#010736]/80">
-              <div className="w-12 h-12 rounded-full bg-[#9FA1FF] text-[#010736] flex items-center justify-center text-xl font-bold shrink-0">
-                {initial}
-              </div>
+              <Blobatar
+                seed={user?.avatarSeed || user?.email || user?.username || "guest"}
+                size={48}
+                className="rounded-full bg-[#010736] p-0.5"
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-[17px] font-bold text-[#FFFAEA] truncate leading-tight">
                   {displayName}
@@ -189,6 +229,24 @@ export default function Navbar() {
             </div>
 
             <div className="my-3 h-px bg-[#9FA1FF]/20" />
+
+            {/* Links de navegación visibles en móvil dentro del menú */}
+            <div className="flex md:hidden flex-col gap-1 pb-2 mb-2 border-b border-[#9FA1FF]/20">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`px-3 py-2 rounded-xl text-[16px] font-semibold transition-colors ${
+                    pathname === link.href
+                      ? "bg-[#9FA1FF]/20 text-[#9FA1FF]"
+                      : "text-[#FFFAEA] hover:bg-[#9FA1FF]/10"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
             <div className="flex flex-col gap-1">
               <Link
