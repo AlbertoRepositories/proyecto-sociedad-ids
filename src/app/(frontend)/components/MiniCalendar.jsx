@@ -92,7 +92,6 @@ export default function MiniCalendar({
         ))}
       </div>
 
-
     </section>
   );
 }
