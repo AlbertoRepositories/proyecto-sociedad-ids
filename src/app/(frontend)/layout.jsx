@@ -24,19 +24,10 @@ export const metadata = {
 export default function FrontendLayout({ children }) {
   return (
     <div
-      className={`${inter.className} ${inter.variable} ${jost.variable} ${electrolize.variable} ${lalezar.variable}`}
-      style={{
-        backgroundColor: "#010736",
-        color: "#FFFAEA",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
+      className={`${inter.variable} ${jost.variable} ${electrolize.variable} ${lalezar.variable} font-sans bg-[#010736] text-[#FFFAEA] min-h-screen flex flex-col`}
     >
       <Navbar />
-      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {children}
-      </main>
+      <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
     </div>
   );

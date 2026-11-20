@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Lalezar, Jost } from "next/font/google";
+import Image from "next/image";
 import HeroCanvas from "../components/HeroCanvas";
-
-const lalezar = Lalezar({ weight: "400", subsets: ["latin"] });
-const jost = Jost({ subsets: ["latin"] });
+import Button from "../components/ui/Button";
 
 const MARQUEE_WORDS = [
   "Racoode",
@@ -22,19 +20,25 @@ const CARDS = [
     title: "Próximos\neventos",
     href: "/calendar",
     image: "/images/raccoon-party.png",
-    imgStyle: { width: "229px", height: "229px" },
+    width: 229,
+    height: 229,
+    imgClass: "w-[229px] h-[229px]",
   },
   {
     title: "Énterate de lo\nnuevo",
     href: "/blog",
     image: "/images/raccoon-shocked.png",
-    imgStyle: { width: "178px", height: "178px", marginBottom: "24px" },
+    width: 178,
+    height: 178,
+    imgClass: "w-[178px] h-[178px] mb-6",
   },
   {
     title: "Cuéntanos algo\nsobre ti",
     href: "/forum",
     image: "/images/raccoon-interested.png",
-    imgStyle: { width: "226px", height: "226px" },
+    width: 226,
+    height: 226,
+    imgClass: "w-[226px] h-[226px]",
   },
 ];
 
@@ -56,149 +60,29 @@ const TEAM_ROW_2 = [
 
 export default function LandingPage() {
   return (
-    <div
-      style={{
-        width: "100%",
-        backgroundColor: "#010736",
-        color: "#FFFAEA",
-        overflowX: "hidden",
-      }}
-    >
-      <style>{`
-        @keyframes slideHorizontalLeft {
-          0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
-        }
-        @keyframes slideHorizontalRight {
-          0% { transform: translate3d(-50%, 0, 0); }
-          100% { transform: translate3d(0, 0, 0); }
-        }
-        @keyframes dashBorderMove {
-          to { stroke-dashoffset: -36; }
-        }
-        .racoode-track-left {
-          display: flex !important;
-          flex-direction: row !important;
-          flex-wrap: nowrap !important;
-          width: max-content !important;
-          animation: slideHorizontalLeft 26s linear infinite;
-        }
-        .racoode-track-right {
-          display: flex !important;
-          flex-direction: row !important;
-          flex-wrap: nowrap !important;
-          width: max-content !important;
-          animation: slideHorizontalRight 30s linear infinite;
-        }
-        .racoode-marquee:hover .racoode-track-left,
-        .racoode-marquee:hover .racoode-track-right {
-          animation-play-state: paused;
-        }
-        .racoode-card-item {
-          transition: transform 0.3s ease;
-        }
-        .racoode-card-item:hover {
-          transform: translateY(-6px);
-        }
-        .racoode-card-item:hover .racoode-card-dash {
-          stroke: #FFFAEA !important;
-          animation: dashBorderMove 0.8s linear infinite;
-        }
-      `}</style>
-
-      {/* 1. HERO CON ANIMACIÓN REACTIVA AL MOUSE (Ajustado al alto real de pantalla) */}
-      <section
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "calc(100dvh - 88px)",
-          minHeight: "480px",
-          maxHeight: "820px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          overflow: "hidden",
-        }}
-      >
+    <div className="w-full bg-[#010736] text-[#FFFAEA] overflow-x-hidden">
+      {/* 1. HERO */}
+      <section className="relative w-full h-[calc(100dvh-88px)] min-h-[480px] max-h-[820px] flex flex-col justify-end overflow-hidden">
         <HeroCanvas />
 
-        <div
-          style={{
-            position: "relative",
-            zIndex: 10,
-            width: "100%",
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "0 clamp(20px, 4vw, 41px) clamp(24px, 4vh, 40px) clamp(20px, 4vw, 41px)",
-            pointerEvents: "none",
-          }}
-        >
-          <h1
-            style={{
-              fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(64px, 10.5vw, 130px)",
-              lineHeight: 0.88,
-              fontWeight: 400,
-              color: "#FFFAEA",
-              margin: 0,
-            }}
-          >
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-5 md:px-10 pb-6 md:pb-10 pointer-events-none">
+          <h1 className="font-lalezar text-[clamp(64px,10.5vw,130px)] leading-[0.88] font-normal text-[#FFFAEA]">
             Racoode
           </h1>
-          <p
-            style={{
-              fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(18px, 2.4vw, 25px)",
-              lineHeight: 1.2,
-              fontWeight: 400,
-              color: "#FFFAEA",
-              marginTop: "6px",
-              marginBottom: 0,
-            }}
-          >
+          <p className="font-lalezar text-[clamp(18px,2.4vw,25px)] leading-tight font-normal text-[#FFFAEA] mt-1.5">
             Sociedad de estudiantes de Ingeniería en Desarrollo de Software
           </p>
         </div>
       </section>
 
-      {/* 2. CINTA CARRUSEL INFINITO HORIZONTAL */}
-      <section
-        className="racoode-marquee"
-        style={{
-          width: "100%",
-          height: "58px",
-          backgroundColor: "#9FA1FF",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          className="racoode-track-left"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "nowrap",
-            alignItems: "center",
-            width: "max-content",
-          }}
-        >
+      {/* 2. MARQUEE INFINITO */}
+      <section className="group w-full h-[58px] bg-[#9FA1FF] flex items-center overflow-hidden">
+        <div className="flex flex-nowrap items-center w-max animate-marquee-left">
           {[...MARQUEE_WORDS, ...MARQUEE_WORDS, ...MARQUEE_WORDS].map(
             (word, idx) => (
               <span
                 key={`${word}-${idx}`}
-                style={{
-                  display: "inline-block",
-                  fontFamily: lalezar.style.fontFamily,
-                  fontSize: "clamp(24px, 3vw, 30px)",
-                  lineHeight: "39px",
-                  fontWeight: 400,
-                  color: "#FFFAEA",
-                  margin: "0 clamp(24px, 3.5vw, 42px)",
-                  whiteSpace: "nowrap",
-                  userSelect: "none",
-                }}
+                className="inline-block font-lalezar text-[clamp(24px,3vw,30px)] leading-none text-[#FFFAEA] mx-6 md:mx-10 whitespace-nowrap select-none"
               >
                 {word}
               </span>
@@ -207,92 +91,29 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. "UNA SOCIEDAD DISEÑADA PARA TI" + 3 TARJETAS */}
-      <section
-        style={{
-          width: "100%",
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "clamp(48px, 6vw, 70px) clamp(20px, 4vw, 41px) clamp(56px, 7vw, 80px) clamp(20px, 4vw, 41px)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "762px",
-            margin: "0 auto clamp(40px, 5vw, 65px) auto",
-            textAlign: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(34px, 5vw, 50px)",
-              lineHeight: 1.15,
-              fontWeight: 400,
-              color: "#FFFAEA",
-              margin: 0,
-            }}
-          >
+      {/* 3. TARJETAS PRINCIPALES */}
+      <section className="w-full max-w-7xl mx-auto px-5 md:px-10 py-14 md:py-20">
+        <div className="max-w-3xl mx-auto mb-10 md:mb-16 text-center">
+          <h2 className="font-lalezar text-[clamp(34px,5vw,50px)] leading-tight font-normal text-[#FFFAEA]">
             Una sociedad{" "}
-            <span style={{ color: "#9FA1FF" }}>diseñada para ti</span>
+            <span className="text-[#9FA1FF]">diseñada para ti</span>
           </h2>
-          <p
-            style={{
-              fontFamily: jost.style.fontFamily,
-              fontSize: "clamp(18px, 2.6vw, 30px)",
-              lineHeight: 1.3,
-              fontWeight: 400,
-              color: "#FFFAEA",
-              marginTop: "8px",
-              marginBottom: 0,
-            }}
-          >
+          <p className="font-jost text-[clamp(18px,2.6vw,30px)] leading-snug text-[#FFFAEA] mt-2">
             Acompañamiento, soluciones y experiencias para vivir tu universidad
             al máximo
           </p>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: "clamp(24px, 3.5vw, 45px)",
-          }}
-        >
+        <div className="flex flex-wrap justify-center gap-6 md:gap-11">
           {CARDS.map((card) => (
             <Link
               key={card.title}
               href={card.href}
-              className="racoode-card-item"
-              style={{
-                position: "relative",
-                width: "min(355px, 100%)",
-                height: "376px",
-                backgroundColor: "#9FA1FF",
-                borderRadius: "15px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingTop: "35px",
-                overflow: "hidden",
-                textDecoration: "none",
-              }}
+              className="group relative w-full max-w-[355px] h-[376px] bg-[#9FA1FF] rounded-[15px] flex flex-col items-center justify-between pt-9 overflow-hidden transition-transform duration-300 hover:-translate-y-1.5"
             >
-              <svg
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  pointerEvents: "none",
-                  zIndex: 20,
-                }}
-              >
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
                 <rect
-                  className="racoode-card-dash"
+                  className="animate-dash-march transition-colors duration-200"
                   x="2"
                   y="2"
                   width="calc(100% - 4px)"
@@ -306,168 +127,57 @@ export default function LandingPage() {
                 />
               </svg>
 
-              <h3
-                style={{
-                  position: "relative",
-                  zIndex: 10,
-                  fontFamily: lalezar.style.fontFamily,
-                  fontSize: "clamp(38px, 4.5vw, 50px)",
-                  lineHeight: 1,
-                  fontWeight: 400,
-                  color: "#FFFAEA",
-                  textAlign: "center",
-                  whiteSpace: "pre-line",
-                  margin: 0,
-                  padding: "0 12px",
-                }}
-              >
+              <h3 className="relative z-10 font-lalezar text-[clamp(38px,4.5vw,50px)] leading-none font-normal text-[#FFFAEA] text-center whitespace-pre-line px-3">
                 {card.title}
               </h3>
 
-              <img
+              <Image
                 src={card.image}
                 alt={card.title.replace("\n", " ")}
-                style={{
-                  position: "relative",
-                  zIndex: 10,
-                  objectFit: "contain",
-                  objectPosition: "bottom",
-                  ...card.imgStyle,
-                }}
+                width={card.width}
+                height={card.height}
+                className={`relative z-10 object-contain object-bottom ${card.imgClass}`}
               />
             </Link>
           ))}
         </div>
       </section>
 
-      {/* 4. "CONOCE AL EQUIPO" + CARRUSEL HORIZONTAL DE 2 FILAS */}
-      <section
-        style={{
-          width: "100%",
-          padding: "clamp(30px, 4vw, 40px) 0 clamp(70px, 8vw, 110px) 0",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            marginBottom: "clamp(36px, 4.5vw, 55px)",
-            padding: "0 24px",
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: lalezar.style.fontFamily,
-              fontSize: "clamp(36px, 5vw, 50px)",
-              lineHeight: 1.15,
-              fontWeight: 400,
-              color: "#FFFAEA",
-              margin: 0,
-            }}
-          >
+      {/* 4. CONOCE AL EQUIPO */}
+      <section className="w-full pt-8 pb-20 md:pb-28">
+        <div className="flex flex-col items-center text-center mb-10 md:mb-14 px-6">
+          <h2 className="font-lalezar text-[clamp(36px,5vw,50px)] leading-tight font-normal text-[#FFFAEA]">
             Conoce al equipo
           </h2>
-          <Link
-            href="/about"
-            style={{
-              marginTop: "10px",
-              height: "41px",
-              padding: "0 22px",
-              backgroundColor: "#FFFAEA",
-              borderRadius: "100px",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: jost.style.fontFamily,
-              fontSize: "20px",
-              fontWeight: 600,
-              color: "#8183E6",
-              textDecoration: "none",
-            }}
-          >
+          <Button href="/about" variant="cream" className="mt-2.5 text-lg">
             About us
-          </Link>
+          </Button>
         </div>
 
-        <div
-          className="racoode-marquee"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          {/* Fila 1 horizontal */}
-          <div
-            className="racoode-track-left"
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              flexWrap: "nowrap",
-              alignItems: "center",
-              gap: "24px",
-              width: "max-content",
-            }}
-          >
+        <div className="group flex flex-col gap-6 w-full overflow-hidden">
+          <div className="flex flex-nowrap items-center gap-6 w-max animate-marquee-left">
             {[...TEAM_ROW_1, ...TEAM_ROW_1, ...TEAM_ROW_1].map((src, i) => (
-              <div
-                key={`r1-${i}`}
-                style={{
-                  width: "245px",
-                  height: "180px",
-                  flexShrink: 0,
-                  display: "inline-block",
-                }}
-              >
-                <img
+              <div key={`r1-${i}`} className="w-[245px] h-[180px] shrink-0">
+                <Image
                   src={src}
                   alt={`Equipo Racoode ${i + 1}`}
-                  style={{
-                    width: "245px",
-                    height: "180px",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
+                  width={245}
+                  height={180}
+                  className="w-[245px] h-[180px] object-contain block"
                 />
               </div>
             ))}
           </div>
 
-          {/* Fila 2 horizontal */}
-          <div
-            className="racoode-track-right"
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              flexWrap: "nowrap",
-              alignItems: "center",
-              gap: "24px",
-              width: "max-content",
-            }}
-          >
+          <div className="flex flex-nowrap items-center gap-6 w-max animate-marquee-right">
             {[...TEAM_ROW_2, ...TEAM_ROW_2, ...TEAM_ROW_2].map((src, i) => (
-              <div
-                key={`r2-${i}`}
-                style={{
-                  width: "245px",
-                  height: "180px",
-                  flexShrink: 0,
-                  display: "inline-block",
-                }}
-              >
-                <img
+              <div key={`r2-${i}`} className="w-[245px] h-[180px] shrink-0">
+                <Image
                   src={src}
                   alt={`Equipo Racoode ${i + 1}`}
-                  style={{
-                    width: "245px",
-                    height: "180px",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
+                  width={245}
+                  height={180}
+                  className="w-[245px] h-[180px] object-contain block"
                 />
               </div>
             ))}

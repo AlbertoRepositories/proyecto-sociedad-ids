@@ -1,12 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { apiFetch } from "../../../lib/api";
+import Button from "./ui/Button";
+import { Input } from "./ui/Input";
+import Card from "./ui/Card";
+import Alert from "./ui/Alert";
 
 export default function AuthSlider({ initialMode = "login" }) {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(initialMode === "register");
+  const [prevInitialMode, setPrevInitialMode] = useState(initialMode);
 
   // Estados para Login
   const [loginEmail, setLoginEmail] = useState("");
@@ -21,12 +27,11 @@ export default function AuthSlider({ initialMode = "login" }) {
   const [regError, setRegError] = useState("");
   const [regLoading, setRegLoading] = useState(false);
 
-  // Sincroniza si cambia el prop inicial
-  useEffect(() => {
+  if (initialMode !== prevInitialMode) {
+    setPrevInitialMode(initialMode);
     setIsSignUp(initialMode === "register");
-  }, [initialMode]);
+  }
 
-  // Alterna panel y actualiza la URL sin recargar la página
   const switchMode = (targetMode) => {
     const goSignUp = targetMode === "register";
     setIsSignUp(goSignUp);
@@ -37,7 +42,6 @@ export default function AuthSlider({ initialMode = "login" }) {
     }
   };
 
-  // Guarda la sesión en localStorage y notifica al Navbar
   const saveSessionAndRedirect = (res, fallbackUser) => {
     const token =
       res.token ||
@@ -54,7 +58,11 @@ export default function AuthSlider({ initialMode = "login" }) {
       localStorage.setItem("accessToken", token);
     }
     if (userObj) {
-      localStorage.setItem("currentUser", JSON.stringify(userObj));
+      const { password, token: _t, accessToken: _at, ...safeUser } = userObj;
+      void password;
+      void _t;
+      void _at;
+      localStorage.setItem("currentUser", JSON.stringify(safeUser));
     }
 
     window.dispatchEvent(new Event("auth-change"));
@@ -62,7 +70,6 @@ export default function AuthSlider({ initialMode = "login" }) {
     router.refresh();
   };
 
-  // Submit de Iniciar Sesión
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError("");
@@ -83,7 +90,6 @@ export default function AuthSlider({ initialMode = "login" }) {
     saveSessionAndRedirect(res, { email: loginEmail });
   };
 
-  // Submit de Registro
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegError("");
@@ -113,12 +119,8 @@ export default function AuthSlider({ initialMode = "login" }) {
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 py-12">
-      {/* Contenedor Principal con tamaño fijo en desktop y responsivo en móvil */}
-      <div className="relative w-full max-w-[960px] min-h-[600px] bg-[#070E4A] border border-[#9FA1FF]/25 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden">
-        
-        {/* =========================================================
-            PANEL 1: FORMULARIO CREAR CUENTA (SIGN UP)
-           ========================================================= */}
+      <Card className="relative w-full max-w-[960px] min-h-[600px] overflow-hidden">
+        {/* PANEL 1: FORMULARIO CREAR CUENTA */}
         <div
           className={`w-full md:w-1/2 h-full md:absolute md:top-0 md:left-0 transition-all duration-700 ease-in-out flex flex-col justify-center px-8 sm:px-12 py-10 ${
             isSignUp
@@ -127,79 +129,57 @@ export default function AuthSlider({ initialMode = "login" }) {
           }`}
         >
           <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-4">
-            <h1
-              className="text-3xl sm:text-4xl font-semibold text-[#FFFAEA] text-center"
-              style={{ fontFamily: "var(--font-jost)" }}
-            >
+            <h1 className="font-jost text-3xl sm:text-4xl font-semibold text-[#FFFAEA] text-center">
               Crea tu Cuenta
             </h1>
             <p className="text-sm text-[#9FA1FF] text-center mb-2">
               Únete a la comunidad de Desarrollo de Software
             </p>
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFAEA] mb-1">
-                Usuario
-              </label>
-              <input
-                type="text"
-                required
-                value={regUsername}
-                onChange={(e) => setRegUsername(e.target.value)}
-                placeholder="Tu nombre de usuario"
-                className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/15 border border-[#9FA1FF]/30 text-[#FFFAEA] placeholder-[#FFFAEA]/50 focus:outline-none focus:border-[#9FA1FF]"
-              />
-            </div>
+            <Input
+              label="Usuario"
+              type="text"
+              required
+              value={regUsername}
+              onChange={(e) => setRegUsername(e.target.value)}
+              placeholder="Tu nombre de usuario"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFAEA] mb-1">
-                Correo institucional o personal
-              </label>
-              <input
-                type="email"
-                required
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-                placeholder="ejemplo@iteso.mx"
-                className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/15 border border-[#9FA1FF]/30 text-[#FFFAEA] placeholder-[#FFFAEA]/50 focus:outline-none focus:border-[#9FA1FF]"
-              />
-            </div>
+            <Input
+              label="Correo institucional o personal"
+              type="email"
+              required
+              value={regEmail}
+              onChange={(e) => setRegEmail(e.target.value)}
+              placeholder="ejemplo@iteso.mx"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFAEA] mb-1">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                required
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/15 border border-[#9FA1FF]/30 text-[#FFFAEA] placeholder-[#FFFAEA]/50 focus:outline-none focus:border-[#9FA1FF]"
-              />
-            </div>
+            <Input
+              label="Contraseña"
+              type="password"
+              required
+              value={regPassword}
+              onChange={(e) => setRegPassword(e.target.value)}
+              placeholder="••••••••"
+            />
 
-            {regError && (
-              <div className="p-3 rounded-xl bg-red-500/20 border border-red-400/50 text-red-200 text-sm">
-                {regError}
-              </div>
-            )}
+            <Alert type="error">{regError}</Alert>
 
-            <button
+            <Button
               type="submit"
-              disabled={regLoading}
-              className="mt-2 w-full py-3 rounded-full bg-[#9747FF] hover:bg-[#a966ff] text-[#FFFAEA] font-semibold tracking-wide transition-transform active:scale-95 cursor-pointer disabled:opacity-50"
+              variant="primary"
+              loading={regLoading}
+              className="w-full mt-2"
             >
               {regLoading ? "Creando cuenta..." : "Registrar"}
-            </button>
+            </Button>
 
-            {/* Botón de cambio solo visible en pantallas móviles */}
             <p className="md:hidden text-center text-sm text-[#FFFAEA]/80 mt-2">
               ¿Ya tienes cuenta?{" "}
               <button
                 type="button"
                 onClick={() => switchMode("login")}
-                className="text-[#9FA1FF] font-semibold underline"
+                className="text-[#9FA1FF] font-semibold underline cursor-pointer"
               >
                 Inicia sesión
               </button>
@@ -207,9 +187,7 @@ export default function AuthSlider({ initialMode = "login" }) {
           </form>
         </div>
 
-        {/* =========================================================
-            PANEL 2: FORMULARIO INICIAR SESIÓN (SIGN IN)
-           ========================================================= */}
+        {/* PANEL 2: FORMULARIO INICIAR SESIÓN */}
         <div
           className={`w-full md:w-1/2 h-full md:absolute md:top-0 md:left-0 transition-all duration-700 ease-in-out flex flex-col justify-center px-8 sm:px-12 py-10 ${
             isSignUp
@@ -218,65 +196,48 @@ export default function AuthSlider({ initialMode = "login" }) {
           }`}
         >
           <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
-            <h1
-              className="text-3xl sm:text-4xl font-semibold text-[#FFFAEA] text-center"
-              style={{ fontFamily: "var(--font-jost)" }}
-            >
+            <h1 className="font-jost text-3xl sm:text-4xl font-semibold text-[#FFFAEA] text-center">
               Iniciar Sesión
             </h1>
             <p className="text-sm text-[#9FA1FF] text-center mb-2">
               Ingresa tus credenciales para continuar
             </p>
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFAEA] mb-1">
-                Correo electrónico
-              </label>
-              <input
-                type="email"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="ejemplo@iteso.mx"
-                className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/15 border border-[#9FA1FF]/30 text-[#FFFAEA] placeholder-[#FFFAEA]/50 focus:outline-none focus:border-[#9FA1FF]"
-              />
-            </div>
+            <Input
+              label="Correo electrónico"
+              type="email"
+              required
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              placeholder="ejemplo@iteso.mx"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-[#FFFAEA] mb-1">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/15 border border-[#9FA1FF]/30 text-[#FFFAEA] placeholder-[#FFFAEA]/50 focus:outline-none focus:border-[#9FA1FF]"
-              />
-            </div>
+            <Input
+              label="Contraseña"
+              type="password"
+              required
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              placeholder="••••••••"
+            />
 
-            {loginError && (
-              <div className="p-3 rounded-xl bg-red-500/20 border border-red-400/50 text-red-200 text-sm">
-                {loginError}
-              </div>
-            )}
+            <Alert type="error">{loginError}</Alert>
 
-            <button
+            <Button
               type="submit"
-              disabled={loginLoading}
-              className="mt-2 w-full py-3 rounded-full bg-[#9FA1FF] hover:bg-white text-[#010736] font-semibold tracking-wide transition-transform active:scale-95 cursor-pointer disabled:opacity-50"
+              variant="secondary"
+              loading={loginLoading}
+              className="w-full mt-2"
             >
               {loginLoading ? "Ingresando..." : "Iniciar sesión"}
-            </button>
+            </Button>
 
-            {/* Botón de cambio solo visible en pantallas móviles */}
             <p className="md:hidden text-center text-sm text-[#FFFAEA]/80 mt-2">
               ¿Aún no tienes cuenta?{" "}
               <button
                 type="button"
                 onClick={() => switchMode("register")}
-                className="text-[#9FA1FF] font-semibold underline"
+                className="text-[#9FA1FF] font-semibold underline cursor-pointer"
               >
                 Regístrate aquí
               </button>
@@ -284,81 +245,75 @@ export default function AuthSlider({ initialMode = "login" }) {
           </form>
         </div>
 
-        {/* =========================================================
-            PANEL 3: OVERLAY DESLIZANTE (SOLO DESKTOP md+)
-           ========================================================= */}
+        {/* PANEL 3: OVERLAY DESLIZANTE */}
         <div
           className={`hidden md:block absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-700 ease-in-out z-30 ${
             isSignUp ? "-translate-x-full" : "translate-x-0"
           }`}
         >
-          {/* Doble ancho interior que se desliza en dirección contraria */}
           <div
             className={`relative -left-full h-full w-[200%] bg-gradient-to-br from-[#9747FF] via-[#4C35DE] to-[#010736] text-[#FFFAEA] transition-transform duration-700 ease-in-out ${
               isSignUp ? "translate-x-1/2" : "translate-x-0"
             }`}
           >
-            {/* Mitad Izquierda del Overlay (se ve cuando isSignUp === true) */}
             <div
               className={`absolute top-0 left-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-10 transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-0" : "-translate-x-[20%]"
               }`}
             >
-              <img
+              <Image
                 src="/images/raccoon-phone.png"
                 alt="Mapache Racoode"
+                width={160}
+                height={160}
                 className="w-40 h-40 object-contain mb-4 drop-shadow-lg"
               />
-              <h2
-                className="text-3xl font-bold mb-2"
-                style={{ fontFamily: "var(--font-jost)" }}
-              >
+              <h2 className="font-jost text-3xl font-bold mb-2">
                 ¡Bienvenido de vuelta!
               </h2>
               <p className="text-sm text-[#FFFAEA]/90 mb-6 leading-relaxed">
                 Si ya te habías registrado antes, inicia sesión con tu cuenta.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
                 onClick={() => switchMode("login")}
-                className="px-10 py-3 rounded-full border-2 border-[#FFFAEA] bg-transparent text-[#FFFAEA] font-semibold uppercase text-xs tracking-widest hover:bg-[#FFFAEA] hover:text-[#010736] transition-all active:scale-95 cursor-pointer"
               >
                 Inicia sesión
-              </button>
+              </Button>
             </div>
 
-            {/* Mitad Derecha del Overlay (se ve cuando isSignUp === false) */}
             <div
               className={`absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-10 transition-transform duration-700 ease-in-out ${
                 isSignUp ? "translate-x-[20%]" : "translate-x-0"
               }`}
             >
-              <img
+              <Image
                 src="/images/raccoon-lights.png"
                 alt="Mapache Racoode"
+                width={160}
+                height={160}
                 className="w-40 h-40 object-contain mb-4 drop-shadow-lg"
               />
-              <h2
-                className="text-3xl font-bold mb-2"
-                style={{ fontFamily: "var(--font-jost)" }}
-              >
+              <h2 className="font-jost text-3xl font-bold mb-2">
                 ¡Hola, Coder!
               </h2>
               <p className="text-sm text-[#FFFAEA]/90 mb-6 leading-relaxed">
                 Crea tu cuenta para enterarte de eventos, talleres y publicaciones de IDS.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
                 onClick={() => switchMode("register")}
-                className="px-10 py-3 rounded-full border-2 border-[#FFFAEA] bg-transparent text-[#FFFAEA] font-semibold uppercase text-xs tracking-widest hover:bg-[#FFFAEA] hover:text-[#010736] transition-all active:scale-95 cursor-pointer"
               >
                 Registrar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-
-      </div>
+      </Card>
     </div>
   );
 }

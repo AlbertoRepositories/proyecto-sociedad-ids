@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useSyncExternalStore } from "react";
 
 function hashString(str) {
   let hash = 2166136261;
@@ -53,15 +53,16 @@ export default function Blobatar({
   className = "",
 }) {
   const svgRef = useRef(null);
-  const [mounted, setMounted] = useState(false);
   const [blink, setBlink] = useState(false);
   const [squish, setSquish] = useState(false);
   const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
 
-  // Evita diferencias entre SSR y cliente al leer localStorage
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Evita diferencias entre SSR y cliente sin causar renders en cascada
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const activeSeed = mounted ? String(seed || "racoode") : "racoode";
 

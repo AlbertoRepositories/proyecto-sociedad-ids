@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Jost } from "next/font/google";
 import { apiFetch } from "../../../lib/api";
 import Blobatar from "./Blobatar";
-
-const jost = Jost({ subsets: ["latin"] });
+import Button from "./ui/Button";
 
 function parseJwt(token) {
   try {
@@ -52,7 +51,7 @@ export default function Navbar() {
         const rawUser = localStorage.getItem("currentUser");
         const token = localStorage.getItem("accessToken");
 
-        let parsedUser = rawUser ? JSON.parse(rawUser) : null;
+        const parsedUser = rawUser ? JSON.parse(rawUser) : null;
         const decodedToken = token ? parseJwt(token) : null;
 
         if (parsedUser || decodedToken) {
@@ -108,16 +107,19 @@ export default function Navbar() {
   const roleLabel = user?.role || (user ? "Estudiante IDS" : "Invitado");
 
   return (
-    <header className="w-full bg-[#010736]/90 backdrop-blur-md px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 z-50">
+    <header className="w-full bg-[#010736]/90 backdrop-blur-md px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 z-50 border-b border-white/5">
       <div className="flex items-center gap-10">
         <Link
           href="/landingpage"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="shrink-0"
         >
-          <img
+          <Image
             src="/images/racoode-logo.png"
             alt="Racoode Logo"
+            width={180}
+            height={48}
+            priority
             className="h-12 w-auto object-contain"
           />
         </Link>
@@ -139,46 +141,42 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Lado derecho: Mascota Blobatar + Contact Us + Botón (=) / (X) */}
+      {/* Lado derecho: Mascota Blobatar + Contact Us + Botón menú */}
       <div className="flex items-center gap-4 md:gap-5 relative" ref={menuRef}>
-        {/* Zona de paseo ampliada del Blobatar */}
         <div
           title="¡Hola! Haz clic para que salte"
           className="hidden md:flex items-end w-48 h-11 relative select-none"
         >
-          {/* Suelo sutil por donde camina */}
           <div className="w-full h-[1.5px] bg-gradient-to-r from-transparent via-[#9FA1FF]/40 to-transparent rounded-full" />
 
-          {/* Mascota caminando constantemente (solo eje X) */}
           <div
             onClick={triggerPetJump}
             className="racoode-pet-patrol absolute bottom-1 left-0 cursor-pointer"
           >
-            {/* Contenedor exclusivo para el salto al hacer clic (solo eje Y) */}
             <div
               onAnimationEnd={() => setPetJumping(false)}
               className={petJumping ? "racoode-pet-jump" : ""}
             >
-              {/* Contenedor de los pasitos suaves */}
               <div className="racoode-pet-hop flex flex-col items-center">
                 <Blobatar
-                  seed={user?.avatarSeed || user?.email || user?.username || "racoode-pet"}
+                  seed={
+                    user?.seed ||
+                    user?.email ||
+                    user?.username ||
+                    "racoode-pet"
+                  }
                   size={36}
                   interactive={true}
                 />
-                {/* Sombrita en el suelo */}
                 <div className="w-5 h-1 rounded-full bg-black/45 blur-[1px] -mt-0.5" />
               </div>
             </div>
           </div>
         </div>
 
-        <Link
-          href="#contact"
-          className="px-6 py-2 rounded-full border-2 border-[#FFFAEA] text-[#FFFAEA] text-xs md:text-sm tracking-wider uppercase hover:bg-[#FFFAEA] hover:text-[#010736] transition-colors"
-        >
+        <Button href="#contact" variant="outline" size="sm">
           Contact us
-        </Link>
+        </Button>
 
         <button
           type="button"
@@ -200,18 +198,16 @@ export default function Navbar() {
         </button>
 
         {menuOpen && (
-          <div
-            style={{ fontFamily: jost.style.fontFamily }}
-            className="absolute right-0 top-14 w-80 rounded-2xl bg-[#070E4A] border border-[#9FA1FF]/40 shadow-[0_20px_50px_rgba(0,0,0,0.65)] p-4 text-[#FFFAEA] z-50"
-          >
+          <div className="font-jost absolute right-0 top-14 w-80 rounded-2xl bg-[#070E4A] border border-[#9FA1FF]/40 shadow-[0_20px_50px_rgba(0,0,0,0.65)] p-4 text-[#FFFAEA] z-50">
             <p className="text-xs font-medium text-[#9FA1FF] px-2 mb-2">
               Actualmente en
             </p>
 
-            {/* Tarjeta de la cuenta activa con Blobatar */}
             <div className="flex items-center gap-3.5 p-3 rounded-xl border-2 border-[#9747FF] bg-[#010736]/80">
               <Blobatar
-                seed={user?.avatarSeed || user?.email || user?.username || "guest"}
+                seed={
+                  user?.seed || user?.email || user?.username || "guest"
+                }
                 size={48}
                 className="rounded-full bg-[#010736] p-0.5"
               />
@@ -230,7 +226,6 @@ export default function Navbar() {
 
             <div className="my-3 h-px bg-[#9FA1FF]/20" />
 
-            {/* Links de navegación visibles en móvil dentro del menú */}
             <div className="flex md:hidden flex-col gap-1 pb-2 mb-2 border-b border-[#9FA1FF]/20">
               {links.map((link) => (
                 <Link
