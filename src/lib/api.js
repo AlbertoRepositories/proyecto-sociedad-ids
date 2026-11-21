@@ -1,11 +1,15 @@
 export async function apiFetch(url, options = {}) {
   try {
     const token =
-      typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+        : null;
 
     const headers = {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token && token !== "undefined" && token !== "null"
+        ? { Authorization: `Bearer ${token}` }
+        : {}),
       ...options.headers,
     };
 
@@ -20,7 +24,7 @@ export async function apiFetch(url, options = {}) {
     if (!response.ok) {
       return {
         success: false,
-        error: data?.error || data?.message || "Error en la solicitud",
+        error: data?.message || data?.error || "Error en la solicitud",
       };
     }
 

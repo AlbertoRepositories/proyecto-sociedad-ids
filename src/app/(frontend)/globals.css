@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-jost: var(--font-jost), sans-serif;
+  --font-lalezar: var(--font-lalezar), cursive, sans-serif;
+  --font-electrolize: var(--font-electrolize), monospace, sans-serif;
+}
+
+/* Marquee infinito horizontal (LandingPage) */
 @keyframes marquee-left {
   0% {
     transform: translate3d(0, 0, 0);
@@ -18,46 +26,32 @@
   }
 }
 
-.marquee-track-left {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  width: max-content !important;
+.animate-marquee-left {
   animation: marquee-left 28s linear infinite;
 }
 
-.marquee-track-right {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  width: max-content !important;
+.animate-marquee-right {
   animation: marquee-right 32s linear infinite;
 }
 
-.marquee-container:hover .marquee-track-left,
-.marquee-container:hover .marquee-track-right {
+.group:hover .animate-marquee-left,
+.group:hover .animate-marquee-right {
   animation-play-state: paused;
 }
 
-@keyframes border-march {
+/* Borde punteado animado en tarjetas interactivas */
+@keyframes dash-march {
   to {
     stroke-dashoffset: -36;
   }
 }
 
-.racoode-card-svg rect {
-  fill: none;
-  stroke: #9747FF;
-  stroke-width: 6;
-  stroke-dasharray: 10 8;
-  transition: stroke 0.25s ease;
+.group:hover .animate-dash-march {
+  stroke: #FFFAEA;
+  animation: dash-march 0.8s linear infinite;
 }
 
-.racoode-card-link:hover .racoode-card-svg rect {
-  stroke: #FFFAEA;
-  animation: border-march 0.8s linear infinite;
-}
-/* Animación de paseo continuo para la mascota Blobatar del Navbar */
+/* Animaciones de la mascota Blobatar en el Navbar */
 @keyframes blobPatrolX {
   0%, 100% {
     transform: translateX(0px);
@@ -82,7 +76,6 @@
   }
 }
 
-/* Salto alto al hacer clic */
 @keyframes blobClickJump {
   0% {
     transform: translateY(0px) scale(1.12, 0.85);
@@ -110,11 +103,7 @@
   animation: blobClickJump 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Se detiene únicamente al pasar el cursor directamente sobre el Blobatar */
-.racoode-pet-patrol:hover {
-  animation-play-state: paused;
-}
-
+.racoode-pet-patrol:hover,
 .racoode-pet-patrol:hover .racoode-pet-hop {
   animation-play-state: paused;
 }

@@ -1,74 +1,127 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Jost, Inter } from "next/font/google";
 import Blobatar from "../components/Blobatar";
 import { apiFetch } from "../../../lib/api";
-
-const jost = Jost({ subsets: ["latin"] });
-const inter = Inter({ subsets: ["latin"] });
+import Button from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import Card from "../components/ui/Card";
+import Alert from "../components/ui/Alert";
 
 export default function SettingsPage() {
   const [user, setUser] = useState(null);
-  const [seed, setSeed] = useState("");
+  const [seed, setSeed] = useState("racoode");
   const [username, setUsername] = useState("");
-  const [savedMsg, setSavedMsg] = useState("");
+  const [statusMsg, setStatusMsg] = useState({ type: "", text: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("currentUser");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setUser(parsed);
-        setUsername(parsed.username || parsed.name || "");
-        setSeed(parsed.avatarSeed || parsed.email || parsed.username || "racoode");
+    let active = true;
+
+    const loadProfile = async () => {
+      // 1. Caché local tras montar en el cliente
+      try {
+        const raw = localStorage.getItem("currentUser");
+        if (raw && active) {
+          const parsed = JSON.parse(raw);
+          setUser(parsed);
+          setUsername(parsed.username || parsed.name || "");
+          setSeed(parsed.seed || parsed.email || parsed.username || "racoode");
+        }
+      } catch {
+        // Ignorar errores de parseo
       }
-    } catch {}
+
+      // 2. Sincroniza con Supabase
+      const res = await apiFetch("/api/users/me", { method: "GET" });
+      if (!active) return;
+
+      if (res.success && res.data) {
+        const dbUser = res.data;
+        setUser(dbUser);
+        setUsername(dbUser.username || dbUser.name || "");
+        setSeed(dbUser.seed || dbUser.email || dbUser.username || "racoode");
+
+        localStorage.setItem("currentUser", JSON.stringify(dbUser));
+        window.dispatchEvent(new Event("auth-change"));
+      }
+    };
+
+    loadProfile();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleRandomize = () => {
     const randomSeed = `racoode-${Math.random().toString(36).substring(2, 9)}`;
     setSeed(randomSeed);
-    setSavedMsg("");
+    setStatusMsg({ type: "", text: "" });
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setSavedMsg("");
+    setStatusMsg({ type: "", text: "" });
+
+    const trimmedSeed = seed.trim();
+    const trimmedUsername = username.trim();
+
+    if (trimmedSeed) {
+      const seedRes = await apiFetch("/api/users/me/seed", {
+        method: "PATCH",
+        body: JSON.stringify({ seed: trimmedSeed }),
+      });
+
+      if (!seedRes.success) {
+        setSaving(false);
+        setStatusMsg({
+          type: "error",
+          text: seedRes.error || "No fue posible guardar los cambios.",
+        });
+        return;
+      }
+    }
+
+    if (trimmedUsername && trimmedUsername !== user?.username) {
+      const userRes = await apiFetch("/api/users/me/username", {
+        method: "PATCH",
+        body: JSON.stringify({ newUsername: trimmedUsername }),
+      });
+
+      if (!userRes.success) {
+        setSaving(false);
+        setStatusMsg({
+          type: "error",
+          text:
+            userRes.error ||
+            "La seed se guardó, pero no se pudo actualizar el usuario.",
+        });
+        return;
+      }
+    }
 
     const updatedUser = {
       ...(user || {}),
-      username,
-      avatarSeed: seed,
+      username: trimmedUsername || user?.username,
+      seed: trimmedSeed || user?.seed,
     };
 
-    // Intenta guardar en tu backend si existe endpoint de perfil
-    await apiFetch("/api/users/me", {
-      method: "PATCH",
-      body: JSON.stringify({ username, avatarSeed: seed }),
-    }).catch(() => {});
-
-    // Guarda localmente y actualiza el Navbar al instante
     localStorage.setItem("currentUser", JSON.stringify(updatedUser));
     setUser(updatedUser);
     window.dispatchEvent(new Event("auth-change"));
 
     setSaving(false);
-    setSavedMsg("¡Tu Blobatar y perfil se guardaron correctamente!");
+    setStatusMsg({
+      type: "success",
+      text: "¡Listo! Tus cambios se han guardado con éxito.",
+    });
   };
 
   return (
-    <main
-      style={{ fontFamily: inter.style.fontFamily }}
-      className="min-h-[80vh] w-full bg-[#010736] text-[#FFFAEA] px-6 py-14 flex items-center justify-center"
-    >
-      <div className="w-full max-w-2xl rounded-3xl bg-[#070E4A] border border-[#9FA1FF]/30 p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-        <h1
-          style={{ fontFamily: jost.style.fontFamily }}
-          className="text-3xl md:text-4xl font-bold text-[#FFFAEA] mb-2"
-        >
+    <div className="flex-1 w-full px-6 py-14 flex items-center justify-center">
+      <Card className="w-full max-w-2xl p-8 md:p-10">
+        <h1 className="font-jost text-3xl md:text-4xl font-bold text-[#FFFAEA] mb-2">
           Configuración de Cuenta
         </h1>
         <p className="text-sm text-[#9FA1FF] mb-8">
@@ -76,8 +129,7 @@ export default function SettingsPage() {
         </p>
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Vista previa interactiva del Blobatar */}
-          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl bg-[#010736]/80 border border-[#9747FF]/60">
+          <Card variant="deep" className="flex flex-col sm:flex-row items-center gap-6 p-6">
             <div className="relative flex flex-col items-center">
               <Blobatar
                 seed={seed}
@@ -96,60 +148,49 @@ export default function SettingsPage() {
                 Semilla (Seed) de tu Blobatar
               </label>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={seed}
                   onChange={(e) => {
                     setSeed(e.target.value);
-                    setSavedMsg("");
+                    setStatusMsg({ type: "", text: "" });
                   }}
                   placeholder="Escribe cualquier palabra..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-[#FFFAEA]/10 border border-[#9FA1FF]/30 text-[#FFFAEA] focus:outline-none focus:border-[#9FA1FF]"
+                  wrapperClassName="flex-1"
+                  className="py-2.5"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={handleRandomize}
-                  className="px-4 py-2.5 rounded-xl bg-[#9747FF] hover:bg-[#a966ff] text-[#FFFAEA] text-sm font-semibold transition-transform active:scale-95 cursor-pointer shrink-0"
+                  className="rounded-xl shrink-0"
                 >
                   Aleatorizar
-                </button>
+                </Button>
               </div>
               <p className="text-xs text-[#FFFAEA]/65">
                 Cada palabra o código genera un personaje único que aparecerá en tu menú, publicaciones y comentarios.
               </p>
             </div>
-          </div>
+          </Card>
 
-          {/* Nombre de usuario */}
-          <div>
-            <label className="block text-sm font-medium text-[#FFFAEA] mb-1.5">
-              Nombre de usuario
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/10 border border-[#9FA1FF]/30 text-[#FFFAEA] focus:outline-none focus:border-[#9FA1FF]"
-            />
-          </div>
+          <Input
+            label="Nombre de usuario"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
 
-          {savedMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 text-sm">
-              {savedMsg}
-            </div>
-          )}
+          <Alert type={statusMsg.type || "info"}>{statusMsg.text}</Alert>
 
           <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-8 py-3 rounded-full bg-[#9FA1FF] hover:bg-white text-[#010736] font-semibold tracking-wide transition-transform active:scale-95 cursor-pointer disabled:opacity-50"
-            >
+            <Button type="submit" variant="secondary" loading={saving}>
               {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </main>
+      </Card>
+    </div>
   );
 }

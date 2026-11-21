@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -17,15 +18,14 @@ export default function Footer() {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="inline-block space-y-4 group cursor-pointer"
           >
-            <h2
-              className="text-5xl font-normal tracking-wide group-hover:text-[#9FA1FF] transition-colors"
-              style={{ fontFamily: "var(--font-electrolize), sans-serif" }}
-            >
+            <h2 className="font-electrolize text-5xl font-normal tracking-wide group-hover:text-[#9FA1FF] transition-colors">
               Racoode
             </h2>
-            <img
-              src="/images/racoode-logo.png"
+            <Image
+              src="/images/racoode-logo.webp"
               alt="Racoode Mascot"
+              width={180}
+              height={120}
               className="w-44 h-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
@@ -73,7 +73,11 @@ export default function Footer() {
             <h3 className="text-xl font-normal">In this website</h3>
             <ul className="space-y-3 text-[17px]">
               <li>
-                <Link href="/landingpage" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}className="hover:text-[#9FA1FF]">
+                <Link
+                  href="/landingpage"
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  className="hover:text-[#9FA1FF]"
+                >
                   Home
                 </Link>
               </li>
@@ -122,9 +126,11 @@ export default function Footer() {
         <p className="text-sm font-bold text-center">
           Copyright © 2026 racoode.com
         </p>
-        <img
-          src="/images/iteso-logo.png"
+        <Image
+          src="/images/iteso-logo.webp"
           alt="ITESO, Universidad Jesuita de Guadalajara"
+          width={160}
+          height={40}
           className="h-10 w-auto object-contain"
         />
       </div>

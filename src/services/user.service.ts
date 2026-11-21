@@ -25,11 +25,10 @@ export class UserService {
       name: input.name.trim(),
       username: input.username.trim(),
       email: input.email.trim().toLowerCase(),
-      externalAuthProvider:
-        input.externalAuthProvider,
+      externalAuthProvider: input.externalAuthProvider,
       type: input.type,
-      notificationsEnabled:
-        input.notificationsEnabled ?? false,
+      notificationsEnabled: input.notificationsEnabled ?? false,
+      seed: input.seed?.trim() || input.username.trim(),
     });
   }
 
