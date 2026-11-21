@@ -131,8 +131,7 @@ export default function BlogPage() {
     imageUrlsText: "",
   });
 
-  async function fetchPosts() {
-    setLoading(true);
+  async function reloadPosts() {
     try {
       const res = await fetch("/api/blog", {
         credentials: "include",
@@ -152,7 +151,25 @@ export default function BlogPage() {
   }
 
   useEffect(() => {
-    fetchPosts();
+    let isMounted = true;
+
+    fetch("/api/blog", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted) return;
+        const dbItems = Array.isArray(json?.data) ? json.data : [];
+        setPosts(SHOW_DEMO_POSTS ? [...dbItems, ...DEMO_POSTS] : dbItems);
+      })
+      .catch(() => {
+        if (isMounted) setPosts(SHOW_DEMO_POSTS ? DEMO_POSTS : []);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   function handleSelectPost(post) {
@@ -242,7 +259,7 @@ export default function BlogPage() {
         registrationUrl: "",
         imageUrlsText: "",
       });
-      await fetchPosts();
+      await reloadPosts();
     } catch {
       setFormError("Error de red al publicar el post.");
     } finally {
