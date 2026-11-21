@@ -92,4 +92,10 @@ export class BlogController {
     if (!result.data) return notFound("Post not found.");
     return NextResponse.json({ success: true, data: result.data });
   }
+
+  static async listPosts(_request: NextRequest, db: SupabaseClient) {
+    const result = await BlogService.listVisiblePosts(db);
+    if (result.error) return databaseError(result.error, "Could not fetch blog posts.");
+    return NextResponse.json({ success: true, data: result.data ?? [] });
+  }
 }
