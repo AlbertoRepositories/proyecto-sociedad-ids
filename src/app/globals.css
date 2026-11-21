@@ -24,3 +24,51 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes slideHorizontalLeft {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes slideHorizontalRight {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes dashBorderMove {
+  to { stroke-dashoffset: -36; }
+}
+
+.racoode-track-left {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: max-content !important;
+  animation: slideHorizontalLeft 26s linear infinite;
+}
+
+.racoode-track-right {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: max-content !important;
+  animation: slideHorizontalRight 30s linear infinite;
+}
+
+.racoode-marquee:hover .racoode-track-left,
+.racoode-marquee:hover .racoode-track-right {
+  animation-play-state: paused;
+}
+
+.racoode-card-item {
+  transition: transform 0.3s ease;
+}
+
+.racoode-card-item:hover {
+  transform: translateY(-6px);
+}
+
+.racoode-card-item:hover .racoode-card-dash {
+  stroke: #FFFAEA !important;
+  animation: dashBorderMove 0.8s linear infinite;
+}

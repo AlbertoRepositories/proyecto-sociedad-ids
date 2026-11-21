@@ -8,11 +8,13 @@ export interface UserInput {
   externalAuthProvider: string;
   type: UserType;
   notificationsEnabled?: boolean;
+  seed?: string;
 }
 
 export interface UserUpdateInput {
   username?: string;
   notificationsEnabled?: boolean;
+  seed?: string;
 }
 
 export interface BlogInput {
