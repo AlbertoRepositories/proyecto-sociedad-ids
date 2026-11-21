@@ -19,7 +19,7 @@ const CARDS = [
   {
     title: "Próximos\neventos",
     href: "/calendar",
-    image: "/images/raccoon-party.png",
+    image: "/images/raccoon-party.webp",
     width: 229,
     height: 229,
     imgClass: "w-[229px] h-[229px]",
@@ -27,7 +27,7 @@ const CARDS = [
   {
     title: "Énterate de lo\nnuevo",
     href: "/blog",
-    image: "/images/raccoon-shocked.png",
+    image: "/images/raccoon-shocked.webp",
     width: 178,
     height: 178,
     imgClass: "w-[178px] h-[178px] mb-6",
@@ -35,7 +35,7 @@ const CARDS = [
   {
     title: "Cuéntanos algo\nsobre ti",
     href: "/forum",
-    image: "/images/raccoon-interested.png",
+    image: "/images/raccoon-interested.webp",
     width: 226,
     height: 226,
     imgClass: "w-[226px] h-[226px]",
@@ -43,19 +43,19 @@ const CARDS = [
 ];
 
 const TEAM_ROW_1 = [
-  "/images/yesh_yo.png",
-  "/images/vic.png",
-  "/images/yesh_sarah_vic_yo.png",
-  "/images/sarah.png",
-  "/images/yesh_sarah_yo.png",
+  "/images/yesh_yo.webp",
+  "/images/vic.webp",
+  "/images/yesh_sarah_vic_yo.webp",
+  "/images/sarah.webp",
+  "/images/yesh_sarah_yo.webp",
 ];
 
 const TEAM_ROW_2 = [
-  "/images/yesh.png",
-  "/images/hania.png",
-  "/images/vero_oscar.png",
-  "/images/oscar.png",
-  "/images/vero.png",
+  "/images/yesh.webp",
+  "/images/hania.webp",
+  "/images/vero_oscar.webp",
+  "/images/oscar.webp",
+  "/images/vero.webp",
 ];
 
 export default function LandingPage() {

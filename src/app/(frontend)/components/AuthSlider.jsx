@@ -262,7 +262,7 @@ export default function AuthSlider({ initialMode = "login" }) {
               }`}
             >
               <Image
-                src="/images/raccoon-phone.png"
+                src="/images/raccoon-phone.webp"
                 alt="Mapache Racoode"
                 width={160}
                 height={160}
@@ -290,7 +290,7 @@ export default function AuthSlider({ initialMode = "login" }) {
               }`}
             >
               <Image
-                src="/images/raccoon-lights.png"
+                src="/images/raccoon-lights.webp"
                 alt="Mapache Racoode"
                 width={160}
                 height={160}

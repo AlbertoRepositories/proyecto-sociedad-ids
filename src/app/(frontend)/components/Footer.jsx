@@ -22,7 +22,7 @@ export default function Footer() {
               Racoode
             </h2>
             <Image
-              src="/images/racoode-logo.png"
+              src="/images/racoode-logo.webp"
               alt="Racoode Mascot"
               width={180}
               height={120}
@@ -127,7 +127,7 @@ export default function Footer() {
           Copyright © 2026 racoode.com
         </p>
         <Image
-          src="/images/iteso-logo.png"
+          src="/images/iteso-logo.webp"
           alt="ITESO, Universidad Jesuita de Guadalajara"
           width={160}
           height={40}

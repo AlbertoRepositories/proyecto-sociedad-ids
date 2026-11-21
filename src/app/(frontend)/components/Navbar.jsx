@@ -115,7 +115,7 @@ export default function Navbar() {
           className="shrink-0"
         >
           <Image
-            src="/images/racoode-logo.png"
+            src="/images/racoode-logo.webp"
             alt="Racoode Logo"
             width={180}
             height={48}
