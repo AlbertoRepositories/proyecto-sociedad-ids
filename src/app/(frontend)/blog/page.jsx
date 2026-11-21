@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { FiPlus, FiX } from "react-icons/fi";
 import BlogPostCard, { resolveCardVariant } from "../components/BlogPostCard";
 import BlogCloseUpModal from "../components/BlogCloseUpModal";
+import Button from "../components/ui/Button";
+import Alert from "../components/ui/Alert";
+import Card from "../components/ui/Card";
+import { Input, Textarea } from "../components/ui/Input";
 
-// Cuadrícula exacta de 9 tarjetas de tu diseño (3x3) usando tus imágenes de /public/images
-// Nota: Si tus archivos son .png en vez de .webp, cambia la extensión aquí.
+// Cambia a false en producción para mostrar solo los posts reales de la base de datos
+const SHOW_DEMO_POSTS = true;
+
 const POST_TEMPLATES = {
   logro: {
     title: "ICPC",
@@ -78,13 +83,39 @@ const FILTERS = [
   { id: "editorial", label: "Anuncios" },
 ];
 
+function subscribeToStorage(callback) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getIsAdminSnapshot() {
+  try {
+    const storedUser = localStorage.getItem("currentUser");
+    if (!storedUser) return false;
+    const parsed = JSON.parse(storedUser);
+    const role = String(parsed?.role || parsed?.type || "").toUpperCase();
+    return role === "ADMINISTRATOR" || role === "ADMIN";
+  } catch {
+    return false;
+  }
+}
+
+function getIsAdminServerSnapshot() {
+  return false;
+}
+
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedPost, setSelectedPost] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const isAdmin = useSyncExternalStore(
+    subscribeToStorage,
+    getIsAdminSnapshot,
+    getIsAdminServerSnapshot
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -100,23 +131,6 @@ export default function BlogPage() {
     imageUrlsText: "",
   });
 
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("currentUser");
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        const role = String(parsed?.role || parsed?.type || "").toUpperCase();
-        if (role === "ADMINISTRATOR" || role === "ADMIN") {
-          setIsAdmin(true);
-        }
-      }
-    } catch {
-      setIsAdmin(false);
-    }
-
-    fetchPosts();
-  }, []);
-
   async function fetchPosts() {
     setLoading(true);
     try {
@@ -126,17 +140,20 @@ export default function BlogPage() {
       if (res.ok) {
         const json = await res.json();
         const dbItems = Array.isArray(json.data) ? json.data : [];
-        // Muestra los posts reales publicados + la cuadrícula completa de 9 ejemplos
-        setPosts([...dbItems, ...DEMO_POSTS]);
+        setPosts(SHOW_DEMO_POSTS ? [...dbItems, ...DEMO_POSTS] : dbItems);
       } else {
-        setPosts(DEMO_POSTS);
+        setPosts(SHOW_DEMO_POSTS ? DEMO_POSTS : []);
       }
     } catch {
-      setPosts(DEMO_POSTS);
+      setPosts(SHOW_DEMO_POSTS ? DEMO_POSTS : []);
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   function handleSelectPost(post) {
     setSelectedPost(post);
@@ -175,7 +192,6 @@ export default function BlogPage() {
           ? `${formData.title} (Intern)`
           : formData.title;
 
-      // --- AQUÍ VA LA VALIDACIÓN DE DUPLICADOS ---
       const mainCover = imageUrls[0];
       const isDuplicate = posts.some(
         (p) =>
@@ -185,11 +201,12 @@ export default function BlogPage() {
       );
 
       if (isDuplicate) {
-        setFormError("Ya existe una publicación con ese mismo título o imagen de portada.");
+        setFormError(
+          "Ya existe una publicación con ese mismo título o imagen de portada."
+        );
         setSubmitting(false);
         return;
       }
-      // ------------------------------------------
 
       const res = await fetch("/api/blog", {
         method: "POST",
@@ -233,13 +250,44 @@ export default function BlogPage() {
     }
   }
 
+  async function handleDeletePost(post) {
+    const confirmed = window.confirm(
+      `¿Seguro que deseas eliminar "${post.title}"? Esta acción no se puede deshacer.`
+    );
+    if (!confirmed) return;
+
+    if (String(post.id).startsWith("demo-")) {
+      setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      if (selectedPost?.id === post.id) setSelectedPost(null);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/blog/${post.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        alert(json.error || "No se pudo eliminar la publicación.");
+        return;
+      }
+
+      setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      if (selectedPost?.id === post.id) setSelectedPost(null);
+    } catch {
+      alert("Error de red al intentar eliminar la publicación.");
+    }
+  }
+
   const filteredPosts =
     activeFilter === "all"
       ? posts
       : posts.filter((p) => resolveCardVariant(p) === activeFilter);
 
   return (
-    <main className="w-full min-h-screen bg-[#010736] text-[#FFFAEA] py-12 md:py-16">
+    <section className="w-full py-12 md:py-16">
       <div className="max-w-6xl mx-auto px-5 md:px-10">
         {/* Cabecera y barra de filtros */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -254,32 +302,34 @@ export default function BlogPage() {
 
           <div className="flex flex-wrap items-center gap-2.5">
             {FILTERS.map((filter) => (
-              <button
+              <Button
                 key={filter.id}
+                type="button"
+                size="sm"
+                variant={activeFilter === filter.id ? "primary" : "ghost"}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`px-4 py-1.5 rounded-full font-jost text-sm font-semibold transition-colors cursor-pointer ${
-                  activeFilter === filter.id
-                    ? "bg-[#9747FF] text-[#FFFAEA]"
-                    : "bg-[#FFFAEA]/10 text-[#FFFAEA]/80 hover:bg-[#FFFAEA]/20"
-                }`}
+                className="font-jost"
               >
                 {filter.label}
-              </button>
+              </Button>
             ))}
 
             {isAdmin && (
-              <button
+              <Button
+                type="button"
+                size="sm"
+                variant="cream"
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#FFFAEA] text-[#010736] hover:bg-[#9FA1FF] font-jost text-sm font-bold transition-colors cursor-pointer ml-1"
+                className="font-jost text-[#010736] ml-1"
               >
                 <FiPlus className="w-4 h-4" />
                 <span>Nuevo Post</span>
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Cuadrícula de tarjetas (3x3 en escritorio, responsiva en móvil/tablet) */}
+        {/* Cuadrícula de tarjetas */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
@@ -296,6 +346,8 @@ export default function BlogPage() {
                 key={post.id}
                 post={post}
                 onSelect={handleSelectPost}
+                isAdmin={isAdmin}
+                onDelete={handleDeletePost}
               />
             ))}
           </div>
@@ -304,6 +356,7 @@ export default function BlogPage() {
 
       {/* Modal Close-Up del post */}
       <BlogCloseUpModal
+        key={selectedPost?.id ?? "closed"}
         post={selectedPost}
         onClose={() => setSelectedPost(null)}
       />
@@ -314,13 +367,16 @@ export default function BlogPage() {
           className="fixed inset-0 z-50 bg-[#010736]/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
           onClick={() => setShowCreateModal(false)}
         >
-          <div
-            className="relative w-full max-w-xl bg-[#010736] border border-[#9FA1FF]/40 rounded-3xl p-6 sm:p-8 shadow-2xl my-auto"
+          <Card
+            variant="dark"
+            className="relative w-full max-w-xl p-6 sm:p-8 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#FFFAEA]/10 hover:bg-[#9747FF] flex items-center justify-center cursor-pointer"
+              aria-label="Cerrar formulario"
+              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-[#9747FF] flex items-center justify-center transition-colors cursor-pointer"
             >
               <FiX className="w-5 h-5" />
             </button>
@@ -332,15 +388,13 @@ export default function BlogPage() {
               Sube la imagen diseñada del póster y completa la información.
             </p>
 
-            {formError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-400 text-sm font-jost text-red-200">
-                {formError}
-              </div>
-            )}
+            <Alert type="error" className="mb-4 font-jost">
+              {formError}
+            </Alert>
 
             <form onSubmit={handleCreatePost} className="space-y-4 font-jost">
               <div>
-                <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
+                <label className="block text-sm font-medium text-[#FFFAEA] mb-1.5">
                   Tipo de publicación
                 </label>
                 <select
@@ -360,122 +414,99 @@ export default function BlogPage() {
                       publicationType: mappedType,
                     });
                   }}
-                  className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 rounded-xl bg-[#FFFAEA]/10 border border-[#9FA1FF]/30 text-[#FFFAEA] focus:outline-none focus:border-[#9FA1FF] transition-colors"
                 >
-                  <option value="poster" className="bg-[#010736]">
+                  <option value="poster" className="bg-[#070E4A]">
                     Evento (Reverso verde)
                   </option>
-                  <option value="magazine" className="bg-[#010736]">
+                  <option value="magazine" className="bg-[#070E4A]">
                     Logro (Reverso morado)
                   </option>
-                  <option value="internship" className="bg-[#010736]">
+                  <option value="internship" className="bg-[#070E4A]">
                     Empleo / Intern (Reverso crema)
                   </option>
-                  <option value="editorial" className="bg-[#010736]">
+                  <option value="editorial" className="bg-[#070E4A]">
                     Anuncio (Reverso morado)
                   </option>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
-                  Título
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  placeholder="Ej. Posada navideña / ICPC"
-                  className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
-                />
-              </div>
+              <Input
+                label="Título"
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                placeholder="Ej. Posada navideña / ICPC"
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
-                    Fecha inicio evento
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.eventStartDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, eventStartDate: e.target.value })
-                    }
-                    className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
-                    Fecha fin evento
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.eventEndDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, eventEndDate: e.target.value })
-                    }
-                    className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
-                  Descripción completa
-                </label>
-                <textarea
-                  rows={4}
+                <Input
+                  label="Fecha inicio evento"
+                  type="date"
                   required
-                  value={formData.content}
+                  value={formData.eventStartDate}
                   onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
+                    setFormData({ ...formData, eventStartDate: e.target.value })
                   }
-                  placeholder="Detalle que se muestra al girar la tarjeta y en el Close-Up..."
-                  className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
+                />
+                <Input
+                  label="Fecha fin evento"
+                  type="date"
+                  required
+                  value={formData.eventEndDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, eventEndDate: e.target.value })
+                  }
                 />
               </div>
 
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#9FA1FF] mb-1">
-                  URLs de imágenes (una por línea — primera es el póster, las demás van al carrusel)
-                </label>
-                <textarea
-                  rows={2}
-                  required
-                  value={formData.imageUrlsText}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrlsText: e.target.value })
-                  }
-                  placeholder="/images/evento.webp"
-                  className="w-full rounded-xl bg-[#FFFAEA]/10 border border-[#FFFAEA]/20 px-3.5 py-2.5 text-[#FFFAEA] focus:outline-none focus:border-[#9747FF]"
-                />
-              </div>
+              <Textarea
+                label="Descripción completa"
+                rows={4}
+                required
+                value={formData.content}
+                onChange={(e) =>
+                  setFormData({ ...formData, content: e.target.value })
+                }
+                placeholder="Detalle que se muestra al girar la tarjeta y en el Close-Up..."
+              />
+
+              <Textarea
+                label="URLs de imágenes (una por línea — primera es el póster, las demás van al carrusel)"
+                rows={2}
+                required
+                value={formData.imageUrlsText}
+                onChange={(e) =>
+                  setFormData({ ...formData, imageUrlsText: e.target.value })
+                }
+                placeholder="/images/evento.webp"
+              />
 
               <div className="flex justify-end gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-5 py-2.5 rounded-full bg-[#FFFAEA]/10 hover:bg-[#FFFAEA]/20 text-sm font-semibold cursor-pointer"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2.5 rounded-full bg-[#9747FF] hover:bg-[#8232eb] text-sm font-bold disabled:opacity-50 cursor-pointer"
+                  variant="primary"
+                  size="sm"
+                  loading={submitting}
                 >
                   {submitting ? "Publicando..." : "Publicar Post"}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
-    </main>
+    </section>
   );
 }
