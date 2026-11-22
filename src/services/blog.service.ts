@@ -157,4 +157,8 @@ export class BlogService {
       result.data.likeCount + 1
     );
   }
+
+  static async listVisiblePosts(db: SupabaseClient) {
+    return BlogRepository.findVisible(db);
+  }
 }

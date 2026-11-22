@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { FaInstagram } from "react-icons/fa";
+import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
 
 export default function Footer() {
   return (
@@ -12,7 +14,6 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-12">
         {/* Columna Marca */}
         <div className="space-y-4 max-w-xs">
-          {/* AQUÍ ESTÁ EL LINK AL INICIO EN EL TÍTULO Y LOGO */}
           <Link
             href="/landingpage"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -43,24 +44,25 @@ export default function Footer() {
             <ul className="space-y-4 text-[17px]">
               <li>
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/racoode_?avpt=cGswYnhzeGt3YmUw"
                   target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 hover:text-[#9FA1FF] transition-colors"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 hover:text-[#9FA1FF] transition-colors"
                 >
-                  <span className="w-8 h-8 rounded border border-white bg-white/5 flex items-center justify-center">
-                    IG
+                  <span className="w-8 h-8 rounded border border-white group-hover:border-[#9FA1FF] bg-white/5 flex items-center justify-center transition-colors">
+                    <FaInstagram className="w-4 h-4" />
                   </span>
                   Instagram
                 </a>
               </li>
+
               <li>
                 <a
                   href="mailto:sads@iteso.mx"
-                  className="flex items-center gap-3 hover:text-[#9FA1FF] transition-colors"
+                  className="group flex items-center gap-3 hover:text-[#9FA1FF] transition-colors"
                 >
-                  <span className="w-8 h-8 rounded border border-white bg-white/5 flex items-center justify-center">
-                    ✉
+                  <span className="w-8 h-8 rounded border border-white group-hover:border-[#9FA1FF] bg-white/5 flex items-center justify-center transition-colors">
+                    <PiMicrosoftOutlookLogoFill className="w-4 h-4" />
                   </span>
                   Outlook
                 </a>
